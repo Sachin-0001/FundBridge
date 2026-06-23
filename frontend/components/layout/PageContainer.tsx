@@ -9,7 +9,7 @@ interface PageContainerProps {
 
 export function PageContainer({ children, title, description }: PageContainerProps) {
   return (
-    <div className="container max-w-7xl py-8 flex flex-col gap-8 min-h-[calc(100vh-4rem)]">
+    <div className="container mx-auto px-4 max-w-7xl py-8 flex flex-col gap-8 min-h-[calc(100vh-4rem)]">
       {(title || description) && (
         <AnimatedSection>
           <div className="space-y-2">
