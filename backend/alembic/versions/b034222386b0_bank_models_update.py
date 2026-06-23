@@ -1,8 +1,8 @@
-"""Initial schema
+"""Bank models update
 
-Revision ID: 7c70151615b5
+Revision ID: b034222386b0
 Revises: 
-Create Date: 2026-06-24 00:17:22.128947
+Create Date: 2026-06-24 00:46:22.406344
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '7c70151615b5'
+revision: str = 'b034222386b0'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -37,8 +37,15 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('institution_name', sa.String(), nullable=False),
-    sa.Column('website', sa.String(), nullable=True),
-    sa.Column('contact_email', sa.String(), nullable=False),
+    sa.Column('institution_type', sa.String(), nullable=False),
+    sa.Column('country', sa.String(), nullable=True),
+    sa.Column('city', sa.String(), nullable=True),
+    sa.Column('loan_products', sa.JSON(), nullable=True),
+    sa.Column('min_interest_rate', sa.Float(), nullable=True),
+    sa.Column('max_interest_rate', sa.Float(), nullable=True),
+    sa.Column('min_loan_amount', sa.Float(), nullable=True),
+    sa.Column('max_loan_amount', sa.Float(), nullable=True),
+    sa.Column('contact_email', sa.String(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
@@ -96,8 +103,12 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('bank_id', sa.Integer(), nullable=False),
     sa.Column('min_revenue', sa.Float(), nullable=True),
-    sa.Column('max_loan_amount', sa.Float(), nullable=True),
+    sa.Column('max_debt_to_revenue_ratio', sa.Float(), nullable=True),
+    sa.Column('min_years_in_business', sa.Integer(), nullable=True),
+    sa.Column('min_readiness_score', sa.Integer(), nullable=True),
     sa.Column('preferred_industries', sa.JSON(), nullable=True),
+    sa.Column('preferred_locations', sa.JSON(), nullable=True),
+    sa.Column('gst_registered_only', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['bank_id'], ['bank_profiles.id'], ),

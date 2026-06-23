@@ -9,11 +9,10 @@ class BankRepository:
         self.session = session
 
     async def create_bank(self, user_id: int, bank_data: BankProfileCreate) -> BankProfile:
+        data_dict = bank_data.model_dump(exclude={"requirements"})
         db_obj = BankProfile(
             user_id=user_id,
-            institution_name=bank_data.institution_name,
-            website=bank_data.website,
-            contact_email=bank_data.contact_email
+            **data_dict
         )
         self.session.add(db_obj)
         await self.session.flush()
