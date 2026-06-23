@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     
     DATABASE_URL: Optional[str] = None
     
+    # AI Config
+    GROQ_API_KEY: Optional[str] = None
+    
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         if self.DATABASE_URL:

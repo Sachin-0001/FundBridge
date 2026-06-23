@@ -2,6 +2,7 @@ from app.database.session import Base
 from app.models.user import User
 from app.models.business import BusinessProfile
 from app.models.bank import BankProfile, BankRequirements
-from app.models.application import Application, Match, Document
+from app.models.application import Application, Document
+from app.models.match import Match
 
 # Import all models here so Alembic can discover them

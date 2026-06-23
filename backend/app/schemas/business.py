@@ -81,6 +81,8 @@ class BusinessProfileResponse(BusinessProfileBase):
     profile_completion: int
     registration_status: str
     ai_summary: Optional[str] = None
+    ai_business_advice: Optional[str] = None
+    ai_report: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

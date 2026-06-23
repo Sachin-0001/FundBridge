@@ -63,6 +63,8 @@ class BusinessProfile(Base):
     profile_completion = Column(Integer, default=100)
     registration_status = Column(String, default="Complete")
     ai_summary = Column(String)
+    ai_business_advice = Column(String)
+    ai_report = Column(String)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -70,3 +72,4 @@ class BusinessProfile(Base):
     user = relationship("User", backref="business_profile")
     applications = relationship("Application", back_populates="business")
     documents = relationship("Document", back_populates="business")
+    matches = relationship("Match", back_populates="business")

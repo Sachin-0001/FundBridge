@@ -23,6 +23,12 @@ class BusinessRepository:
             select(BusinessProfile).where(BusinessProfile.user_id == user_id)
         )
         return result.scalars().first()
+
+    async def get_by_id(self, id: int) -> BusinessProfile | None:
+        result = await self.session.execute(
+            select(BusinessProfile).where(BusinessProfile.id == id)
+        )
+        return result.scalars().first()
         
     async def get_all(self):
         result = await self.session.execute(select(BusinessProfile))

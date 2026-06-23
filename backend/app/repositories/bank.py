@@ -38,3 +38,15 @@ class BankRepository:
             select(BankProfile).options(selectinload(BankProfile.requirements)).where(BankProfile.user_id == user_id)
         )
         return result.scalars().first()
+
+    async def get_by_id(self, id: int) -> BankProfile | None:
+        result = await self.session.execute(
+            select(BankProfile).options(selectinload(BankProfile.requirements)).where(BankProfile.id == id)
+        )
+        return result.scalars().first()
+
+    async def get_all(self):
+        result = await self.session.execute(
+            select(BankProfile).options(selectinload(BankProfile.requirements))
+        )
+        return result.scalars().all()
