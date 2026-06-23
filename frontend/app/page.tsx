@@ -16,9 +16,37 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-clip bg-background">
       {/* Background Gradients */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
-      <div className="absolute top-0 right-0 -z-10 w-full h-[500px] bg-gradient-to-l from-blue-500/5 to-transparent blur-3xl" />
-      <div className="absolute bottom-0 left-0 -z-10 w-full h-[500px] bg-gradient-to-t from-primary/5 to-transparent blur-3xl" />
+      <div className="absolute inset-0 -z-10">
+        <AnimatePresence>
+          {mode === "Business" ? (
+            <motion.div
+              key="bg-business"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute inset-0"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+              <div className="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-l from-blue-500/10 to-transparent blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-full h-[500px] bg-gradient-to-t from-primary/10 to-transparent blur-3xl" />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="bg-bank"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.8 }}
+              className="absolute inset-0"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-background to-background" />
+              <div className="absolute top-0 right-0 w-full h-[500px] bg-gradient-to-l from-teal-500/10 to-transparent blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-full h-[500px] bg-gradient-to-t from-emerald-500/10 to-transparent blur-3xl" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <PageContainer>
         <div className="flex flex-col items-center justify-center pt-16 pb-8">

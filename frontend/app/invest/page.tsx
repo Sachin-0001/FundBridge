@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
@@ -5,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { BankService } from "@/services/bank.service";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +27,6 @@ const steps = [
 
 const formSchema = z.object({
   bankName: z.string().min(2, "Bank name is required"),
-  contactEmail: z.string().email("Invalid email"),
   productTypes: z.string().min(1, "Please list at least one product type"),
   minRevenue: z.string().min(1, "Required"),
   preferredIndustries: z.string().optional(),
@@ -41,7 +43,6 @@ export default function InvestPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       bankName: "",
-      contactEmail: "",
       productTypes: "",
       minRevenue: "",
       preferredIndustries: "",
@@ -51,7 +52,7 @@ export default function InvestPage() {
 
   const nextStep = async () => {
     let isValid = false;
-    if (currentStep === 0) isValid = await form.trigger(["bankName", "contactEmail"]);
+    if (currentStep === 0) isValid = await form.trigger(["bankName"]);
     else if (currentStep === 1) isValid = await form.trigger(["productTypes"]);
     else if (currentStep === 2) isValid = await form.trigger(["minRevenue"]);
     else isValid = true;
@@ -63,12 +64,24 @@ export default function InvestPage() {
 
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    setIsCompleted(true);
-    setTimeout(() => {
-      router.push("/dashboard/bank");
-    }, 2500);
+  const onSubmit = async (data: FormValues) => {
+    try {
+      setIsCompleted(true);
+      await BankService.register({
+        institution_name: data.bankName,
+        contact_email: "account@bank.com", // Will be extracted from backend token if needed, or left as placeholder
+        requirements: {
+          min_revenue: parseFloat(data.minRevenue) || 0,
+        }
+      });
+      localStorage.setItem('user_type', 'bank');
+      setTimeout(() => {
+        router.push("/dashboard/bank");
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to register bank:", error);
+      setIsCompleted(false);
+    }
   };
 
   if (isCompleted) {
@@ -92,17 +105,24 @@ export default function InvestPage() {
   const progressPercentage = ((currentStep) / (steps.length - 1)) * 100;
 
   return (
-    <PageContainer>
-      <div className="absolute top-0 right-0 -z-10 w-full h-[500px] bg-gradient-to-l from-emerald-500/5 to-transparent blur-3xl" />
+    <div className="relative min-h-screen bg-background overflow-clip">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-background to-background" />
+      <div className="absolute top-0 right-0 -z-10 w-full h-[500px] bg-gradient-to-l from-teal-500/10 to-transparent blur-3xl" />
+      <div className="absolute bottom-0 left-0 -z-10 w-full h-[500px] bg-gradient-to-t from-emerald-500/10 to-transparent blur-3xl" />
+      <PageContainer>
       <div className="max-w-3xl mx-auto w-full pt-8 pb-20">
+        <Button variant="ghost" className="mb-6 -ml-4 text-muted-foreground hover:text-foreground" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
         <div className="mb-12 space-y-6 text-center">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-4">
+          {/* <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-4">
             <Building className="h-8 w-8" />
-          </div>
+          </div> */}
           <h1 className="text-3xl font-bold">Partner with FundBridge</h1>
           
           <div className="relative mt-8">
-             <Progress value={progressPercentage} className="h-2" />
+             <Progress value={progressPercentage} className="h-2 [&_[data-slot=progress-indicator]]:bg-emerald-500" />
              <div className="absolute top-4 left-0 w-full flex justify-between text-xs font-medium text-muted-foreground">
                {steps.map((s, i) => (
                  <span key={s.id} className={i <= currentStep ? "text-emerald-500 font-semibold" : ""}>{s.title}</span>
@@ -129,11 +149,6 @@ export default function InvestPage() {
                         <Label htmlFor="bankName">Institution Name</Label>
                         <Input id="bankName" {...form.register("bankName")} placeholder="Global Finance Bank" className="h-12" />
                         {form.formState.errors.bankName && <p className="text-sm text-destructive">{form.formState.errors.bankName.message}</p>}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="contactEmail">Partnership Email</Label>
-                        <Input id="contactEmail" type="email" {...form.register("contactEmail")} placeholder="partnerships@bank.com" className="h-12" />
-                        {form.formState.errors.contactEmail && <p className="text-sm text-destructive">{form.formState.errors.contactEmail.message}</p>}
                       </div>
                     </div>
                   </div>
@@ -197,6 +212,7 @@ export default function InvestPage() {
           </form>
         </Card>
       </div>
-    </PageContainer>
+      </PageContainer>
+    </div>
   );
 }

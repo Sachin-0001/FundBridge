@@ -1,7 +1,38 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
+
 import { Card } from "@/components/ui/card";
-import { Building, LayoutDashboard, Settings, Users } from "lucide-react";
+import { Building, LayoutDashboard, Settings, Users, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BankService } from "@/services/bank.service";
 
 export default function BankDashboard() {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    BankService.getDashboard().then((res) => {
+      setData(res.data);
+      setLoading(false);
+    }).catch((err) => {
+      console.error(err);
+      if (err.response?.status === 404) {
+        window.location.href = "/invest";
+      } else {
+        setLoading(false);
+      }
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar Placeholder */}
@@ -29,18 +60,18 @@ export default function BankDashboard() {
         <header className="h-16 border-b flex items-center px-8 justify-between">
           <h1 className="text-xl font-semibold">Deal Flow Overview</h1>
           <div className="h-8 w-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold">
-            GF
+            {data?.institution_name?.substring(0, 2).toUpperCase() || "GF"}
           </div>
         </header>
         <div className="p-8 space-y-8 flex-1 overflow-y-auto">
           <div className="grid md:grid-cols-3 gap-6">
             <Card className="p-6 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">New Opportunities</p>
-              <h3 className="text-2xl font-bold text-emerald-500">14</h3>
+              <p className="text-sm font-medium text-muted-foreground">Institution Name</p>
+              <h3 className="text-2xl font-bold text-emerald-500">{data?.institution_name || "Unknown"}</h3>
             </Card>
             <Card className="p-6 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Pending Review</p>
-              <h3 className="text-2xl font-bold">5</h3>
+              <p className="text-sm font-medium text-muted-foreground">Target Min Revenue</p>
+              <h3 className="text-2xl font-bold">${data?.requirements?.min_revenue?.toLocaleString() || "0"}</h3>
             </Card>
             <Card className="p-6 space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Funded Deals (YTD)</p>
