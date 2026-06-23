@@ -12,7 +12,7 @@ api.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.set('Authorization', `Bearer ${token}`);
       }
     }
     return config;
@@ -27,7 +27,12 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Global error handling, e.g., redirect on 401
+    if (error.response && error.response.status === 401) {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );

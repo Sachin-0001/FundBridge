@@ -119,9 +119,7 @@ export default function BorrowPage() {
       await BusinessService.register(data);
       localStorage.removeItem("borrow_form_autosave");
       localStorage.setItem('user_type', 'business');
-      setTimeout(() => {
-        router.push("/dashboard/business");
-      }, 1000);
+      router.push("/dashboard/business");
     } catch (error) {
       console.error("Failed to register business:", error);
       setIsCompleted(false);

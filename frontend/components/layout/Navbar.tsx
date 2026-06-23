@@ -8,7 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
+  const homeHref = isAuthenticated && user
+  ? `/dashboard/${user.role.toLowerCase()}`
+  : "/";
   const getInitials = () => {
     if (user?.role === "BUSINESS" && user?.profile?.company_name) {
       return user.profile.company_name.substring(0, 2).toUpperCase();
@@ -37,7 +39,7 @@ export function Navbar() {
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
       <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
+        <Link href={homeHref} className="flex items-center space-x-2">
           <span className="font-bold text-xl tracking-tight text-primary">FundBridge</span>
         </Link>
         <div className="flex items-center gap-4">
@@ -52,7 +54,7 @@ export function Navbar() {
                 </div>
                 <div className="flex flex-col items-start hidden sm:flex">
                   <span className="text-sm font-medium leading-none mb-1">{getProfileName()}</span>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{user.role === 'BUSINESS' ? 'Free Plan' : 'Partner'}</span>
+                  {/* <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{user.role === 'BUSINESS' ? 'Free Plan' : 'Partner'}</span> */}
                 </div>
                 <ChevronDown className="h-4 w-4 text-muted-foreground ml-1" />
               </button>

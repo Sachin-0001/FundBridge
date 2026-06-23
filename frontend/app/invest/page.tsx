@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { BankService } from "@/services/bank.service";
@@ -14,22 +14,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, ArrowLeft, Building, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const steps = [
-  { id: "details", title: "Bank Details" },
-  { id: "products", title: "Loan Products" },
+  { id: "details", title: "Institution Details" },
+  { id: "products", title: "Lending Products" },
   { id: "rules", title: "Eligibility Rules" },
-  { id: "review", title: "Review" },
+  { id: "preferences", title: "Lending Preferences" },
+];
+
+const institutionTypes = [
+  "Commercial Bank",
+  "NBFC",
+  "Credit Union",
+  "Venture Debt",
+  "FinTech Lender",
+  "Government Institution",
+  "Private Lending Firm"
+];
+
+const loanProductOptions = [
+  "Working Capital",
+  "Equipment Financing",
+  "Invoice Financing",
+  "Business Expansion",
+  "MSME Loan",
+  "Line of Credit",
+  "Term Loan"
 ];
 
 const formSchema = z.object({
-  bankName: z.string().min(2, "Bank name is required"),
-  productTypes: z.string().min(1, "Please list at least one product type"),
-  minRevenue: z.string().min(1, "Required"),
-  preferredIndustries: z.string().optional(),
+  // Step 1
+  institution_name: z.string().min(2, "Institution name is required"),
+  institution_type: z.string().min(2, "Institution type is required"),
+  country: z.string().min(2, "Country is required"),
+  city: z.string().min(2, "City is required"),
+  
+  // Step 2
+  loan_products: z.array(z.string()).min(1, "Select at least one loan product"),
+  min_interest_rate: z.coerce.number().min(0).max(100),
+  max_interest_rate: z.coerce.number().min(0).max(100),
+  min_loan_amount: z.coerce.number().min(0),
+  max_loan_amount: z.coerce.number().min(0),
+
+  // Step 3
+  min_revenue: z.coerce.number().min(0),
+  max_debt_to_revenue_ratio: z.coerce.number().min(0).max(100),
+  min_years_in_business: z.coerce.number().min(0),
+  min_readiness_score: z.coerce.number().min(0).max(100),
+
+  // Step 4
+  preferred_industries: z.string().min(1, "Select at least one industry (can type 'All')"),
+  preferred_locations: z.string().min(1, "Select at least one location (can type 'All')"),
+  gst_registered_only: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -42,20 +80,50 @@ export default function InvestPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      bankName: "",
-      productTypes: "",
-      minRevenue: "",
-      preferredIndustries: "",
+      institution_name: "",
+      institution_type: institutionTypes[0],
+      country: "",
+      city: "",
+      loan_products: [],
+      min_interest_rate: "" as any,
+      max_interest_rate: "" as any,
+      min_loan_amount: "" as any,
+      max_loan_amount: "" as any,
+      min_revenue: "" as any,
+      max_debt_to_revenue_ratio: "" as any,
+      min_years_in_business: "" as any,
+      min_readiness_score: "" as any,
+      preferred_industries: "",
+      preferred_locations: "",
+      gst_registered_only: false,
     },
     mode: "onChange"
   });
 
+  // Autosave logic
+  useEffect(() => {
+    const saved = localStorage.getItem("bank_form_autosave");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        form.reset(parsed);
+      } catch (e) {}
+    }
+  }, [form]);
+
+  useEffect(() => {
+    const subscription = form.watch((value) => {
+      localStorage.setItem("bank_form_autosave", JSON.stringify(value));
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const nextStep = async () => {
     let isValid = false;
-    if (currentStep === 0) isValid = await form.trigger(["bankName"]);
-    else if (currentStep === 1) isValid = await form.trigger(["productTypes"]);
-    else if (currentStep === 2) isValid = await form.trigger(["minRevenue"]);
-    else isValid = true;
+    if (currentStep === 0) isValid = await form.trigger(["institution_name", "institution_type", "country", "city"]);
+    else if (currentStep === 1) isValid = await form.trigger(["loan_products", "min_interest_rate", "max_interest_rate", "min_loan_amount", "max_loan_amount"]);
+    else if (currentStep === 2) isValid = await form.trigger(["min_revenue", "max_debt_to_revenue_ratio", "min_years_in_business", "min_readiness_score"]);
+    else isValid = await form.trigger(["preferred_industries", "preferred_locations", "gst_registered_only"]);
 
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
@@ -64,23 +132,38 @@ export default function InvestPage() {
 
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const onSubmit = async (data: FormValues) => {
     try {
       setIsCompleted(true);
+      setSubmitError(null);
       await BankService.register({
-        institution_name: data.bankName,
-        contact_email: "account@bank.com", // Will be extracted from backend token if needed, or left as placeholder
+        institution_name: data.institution_name,
+        institution_type: data.institution_type,
+        country: data.country,
+        city: data.city,
+        loan_products: data.loan_products,
+        min_interest_rate: data.min_interest_rate,
+        max_interest_rate: data.max_interest_rate,
+        min_loan_amount: data.min_loan_amount,
+        max_loan_amount: data.max_loan_amount,
         requirements: {
-          min_revenue: parseFloat(data.minRevenue) || 0,
+          min_revenue: data.min_revenue,
+          max_debt_to_revenue_ratio: data.max_debt_to_revenue_ratio,
+          min_years_in_business: data.min_years_in_business,
+          min_readiness_score: data.min_readiness_score,
+          preferred_industries: data.preferred_industries.split(",").map((s: string) => s.trim()).filter(Boolean),
+          preferred_locations: data.preferred_locations.split(",").map((s: string) => s.trim()).filter(Boolean),
+          gst_registered_only: data.gst_registered_only,
         }
       });
-      localStorage.setItem('user_type', 'bank');
-      setTimeout(() => {
-        router.push("/dashboard/bank");
-      }, 1000);
-    } catch (error) {
+      localStorage.removeItem("bank_form_autosave");
+      router.push("/dashboard/bank");
+    } catch (error: any) {
       console.error("Failed to register bank:", error);
       setIsCompleted(false);
+      setSubmitError(error.response?.data?.detail || "An error occurred during registration. Please try again.");
     }
   };
 
@@ -102,7 +185,7 @@ export default function InvestPage() {
     );
   }
 
-  const progressPercentage = ((currentStep) / (steps.length - 1)) * 100;
+  const progressPercentage = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <div className="relative min-h-screen bg-background overflow-clip">
@@ -116,9 +199,6 @@ export default function InvestPage() {
           Back
         </Button>
         <div className="mb-12 space-y-6 text-center">
-          {/* <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-500/10 text-emerald-500 mb-4">
-            <Building className="h-8 w-8" />
-          </div> */}
           <h1 className="text-3xl font-bold">Partner with FundBridge</h1>
           
           <div className="relative mt-8">
@@ -132,7 +212,7 @@ export default function InvestPage() {
         </div>
 
         <Card className="p-8 shadow-2xl shadow-emerald-500/5 border-border/50 bg-card/60 backdrop-blur-xl mt-12">
-          <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-[300px] flex flex-col justify-between">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="min-h-[400px] flex flex-col justify-between">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep}
@@ -143,25 +223,73 @@ export default function InvestPage() {
               >
                 {currentStep === 0 && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">Bank Details</h2>
-                    <div className="space-y-4">
+                    <h2 className="text-2xl font-semibold">Institution Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Institution Name</Label>
+                        <Input {...form.register("institution_name")} placeholder="Global Finance Bank" className="h-12" />
+                        {form.formState.errors.institution_name && <p className="text-sm text-destructive">{form.formState.errors.institution_name.message}</p>}
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Institution Type</Label>
+                        <select {...form.register("institution_type")} className="flex h-12 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring">
+                          {institutionTypes.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        {form.formState.errors.institution_type && <p className="text-sm text-destructive">{form.formState.errors.institution_type.message}</p>}
+                      </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bankName">Institution Name</Label>
-                        <Input id="bankName" {...form.register("bankName")} placeholder="Global Finance Bank" className="h-12" />
-                        {form.formState.errors.bankName && <p className="text-sm text-destructive">{form.formState.errors.bankName.message}</p>}
+                        <Label>Country</Label>
+                        <Input {...form.register("country")} placeholder="USA" className="h-12" />
+                        {form.formState.errors.country && <p className="text-sm text-destructive">{form.formState.errors.country.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Headquarters City</Label>
+                        <Input {...form.register("city")} placeholder="New York" className="h-12" />
+                        {form.formState.errors.city && <p className="text-sm text-destructive">{form.formState.errors.city.message}</p>}
                       </div>
                     </div>
                   </div>
                 )}
                 {currentStep === 1 && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">Loan Products</h2>
-                    <p className="text-sm text-muted-foreground">Describe the types of capital you provide.</p>
+                    <h2 className="text-2xl font-semibold">Lending Products</h2>
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="productTypes">Product Offerings</Label>
-                        <Textarea id="productTypes" {...form.register("productTypes")} placeholder="Term loans, SBA 7(a), Lines of credit..." className="min-h-[100px]" />
-                        {form.formState.errors.productTypes && <p className="text-sm text-destructive">{form.formState.errors.productTypes.message}</p>}
+                        <Label>Loan Products Offered</Label>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          {loanProductOptions.map((opt) => (
+                            <label key={opt} className="flex items-center space-x-2 border p-3 rounded-lg cursor-pointer hover:bg-muted/50">
+                              <input 
+                                type="checkbox" 
+                                value={opt} 
+                                {...form.register("loan_products")}
+                                className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600" 
+                              />
+                              <span className="text-sm">{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {form.formState.errors.loan_products && <p className="text-sm text-destructive">{form.formState.errors.loan_products.message}</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Min Interest Rate (%)</Label>
+                          <Input type="number" step="0.1" {...form.register("min_interest_rate")} placeholder="5.5" className="h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Max Interest Rate (%)</Label>
+                          <Input type="number" step="0.1" {...form.register("max_interest_rate")} placeholder="15.0" className="h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Min Loan Amount ($)</Label>
+                          <Input type="number" {...form.register("min_loan_amount")} placeholder="10000" className="h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Max Loan Amount ($)</Label>
+                          <Input type="number" {...form.register("max_loan_amount")} placeholder="10000000" className="h-12" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -169,45 +297,82 @@ export default function InvestPage() {
                 {currentStep === 2 && (
                   <div className="space-y-6">
                     <h2 className="text-2xl font-semibold">Eligibility Rules</h2>
-                    <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">These rules automatically filter out businesses that don't match your criteria.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="minRevenue">Minimum Annual Revenue Requirement</Label>
-                        <Input id="minRevenue" {...form.register("minRevenue")} placeholder="$500,000" className="h-12" />
-                        {form.formState.errors.minRevenue && <p className="text-sm text-destructive">{form.formState.errors.minRevenue.message}</p>}
+                        <Label>Min Annual Revenue ($)</Label>
+                        <Input type="number" {...form.register("min_revenue")} placeholder="500000" className="h-12" />
+                        <p className="text-xs text-muted-foreground">Only businesses with revenue above this amount will match.</p>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="preferredIndustries">Preferred Industries (Optional)</Label>
-                        <Input id="preferredIndustries" {...form.register("preferredIndustries")} placeholder="Tech, Healthcare, Manufacturing" className="h-12" />
+                        <Label>Max Debt-to-Revenue Ratio (%)</Label>
+                        <Input type="number" {...form.register("max_debt_to_revenue_ratio")} placeholder="40" className="h-12" />
+                        <p className="text-xs text-muted-foreground">Filters out highly leveraged businesses.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Min Years in Business</Label>
+                        <Input type="number" {...form.register("min_years_in_business")} placeholder="2" className="h-12" />
+                        <p className="text-xs text-muted-foreground">Minimum operational history required.</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Min AI Readiness Score</Label>
+                        <Input type="number" {...form.register("min_readiness_score")} placeholder="70" className="h-12" />
+                        <p className="text-xs text-muted-foreground">FundBridge proprietary score (0-100).</p>
                       </div>
                     </div>
                   </div>
                 )}
                 {currentStep === 3 && (
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-semibold">Review Configuration</h2>
-                    <div className="space-y-4 bg-muted/30 p-6 rounded-lg text-sm">
-                      <div className="flex justify-between border-b pb-2"><span className="text-muted-foreground">Institution:</span><span className="font-medium">{form.getValues("bankName")}</span></div>
-                      <div className="flex justify-between border-b pb-2"><span className="text-muted-foreground">Email:</span><span className="font-medium">{form.getValues("contactEmail")}</span></div>
-                      <div className="flex justify-between border-b pb-2"><span className="text-muted-foreground">Min Revenue:</span><span className="font-medium">{form.getValues("minRevenue")}</span></div>
+                    <h2 className="text-2xl font-semibold">Lending Preferences</h2>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label>Preferred Industries (Comma separated)</Label>
+                        <Input {...form.register("preferred_industries")} placeholder="Technology, Healthcare, Manufacturing" className="h-12" />
+                        {form.formState.errors.preferred_industries && <p className="text-sm text-destructive">{form.formState.errors.preferred_industries.message}</p>}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Preferred Locations (Comma separated)</Label>
+                        <Input {...form.register("preferred_locations")} placeholder="New York, California, Texas" className="h-12" />
+                        {form.formState.errors.preferred_locations && <p className="text-sm text-destructive">{form.formState.errors.preferred_locations.message}</p>}
+                      </div>
+                      <div className="space-y-2 flex flex-col justify-end pt-4">
+                        <label className="flex items-center space-x-2 cursor-pointer">
+                          <input type="checkbox" {...form.register("gst_registered_only")} className="h-5 w-5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-600" />
+                          <span className="text-sm font-medium">Accept GST/Tax Registered Businesses Only</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 )}
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex justify-between mt-12 pt-6 border-t border-border/50">
-              <Button type="button" variant="ghost" onClick={prevStep} disabled={currentStep === 0}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-              {currentStep < steps.length - 1 ? (
-                <Button type="button" onClick={nextStep} className="px-8 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button type="submit" className="px-8 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white">
-                  Complete Registration
-                </Button>
+            <div className="flex flex-col mt-12 pt-6 border-t border-border/50">
+              {submitError && (
+                <div className="mb-4 p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
+                  {typeof submitError === 'string' ? submitError : JSON.stringify(submitError)}
+                </div>
               )}
+              <div className="flex justify-between">
+                <Button type="button" variant="ghost" onClick={prevStep} disabled={currentStep === 0}>
+                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                </Button>
+                {currentStep < steps.length - 1 ? (
+                  <Button type="button" onClick={nextStep} className="px-8 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20">
+                    Continue <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    {Object.keys(form.formState.errors).length > 0 && (
+                      <span className="text-sm text-destructive font-medium">Please fix errors before submitting.</span>
+                    )}
+                    <Button type="submit" className="px-8 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20" onClick={() => console.log("Submit clicked, errors:", form.formState.errors)}>
+                      Complete Registration
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </form>
         </Card>
