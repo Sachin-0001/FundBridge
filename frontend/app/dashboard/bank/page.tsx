@@ -1,24 +1,71 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Building, LayoutDashboard, Settings, Users, Loader2, 
-  Target, Briefcase, MapPin, BadgeDollarSign, 
-  Activity, Percent, Search, HeartPulse, ChevronRight
-} from "lucide-react";
+  Building2, 
+  Users, 
+  FileText,
+  Building, 
+  Briefcase, 
+  MapPin, 
+  BadgeDollarSign, 
+  Activity, 
+  HeartPulse, 
+  ChevronDown, 
+  DollarSign,
+  TrendingUp,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  ArrowRight,
+  Shield,
+  Zap,
+  Landmark,
+  Percent,
+  X,
+  ChevronRight,
+  RefreshCw,
+  Bell,
+  LayoutDashboard,
+  Settings,
+  Loader2,
+  Target,
+  Filter
+} from 'lucide-react';
 import { BankService } from "@/services/bank.service";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function BankDashboard() {
   const [data, setData] = useState<any>(null);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-
-  useEffect(() => {
-    BankService.getDashboard().then((res) => {
-      setData(res.data);
+  
+  const [activeTab, setActiveTab] = useState<"matches" | "applications">("applications");
+  const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
+  const [selectedApp, setSelectedApp] = useState<any | null>(null);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [industryFilter, setIndustryFilter] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [minRevenue, setMinRevenue] = useState<number | "">("");
+  const [minScore, setMinScore] = useState<number | "">("");
+  const [minAiScore, setMinAiScore] = useState<number | "">("");
+  const [maxFunding, setMaxFunding] = useState<number | "">("");
+  
+  const loadData = () => {
+    Promise.all([
+      BankService.getDashboard(),
+      BankService.getMatches(),
+      import('@/services/application.service').then(m => m.applicationService.getBankApplications())
+    ]).then(([dashboardRes, matchesRes, apps]) => {
+      setData(dashboardRes.data);
+      setMatches(matchesRes.data || []);
+      setApplications(apps || []);
       setLoading(false);
     }).catch((err) => {
       console.error(err);
@@ -28,27 +75,26 @@ export default function BankDashboard() {
         setLoading(false);
       }
     });
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-      </div>
-    );
-  }
-
-  // Greeting logic
-  const hour = new Date().getHours();
-
-  const greeting =
-    hour >= 5 && hour < 12
-      ? "Good Morning"
-      : hour >= 12 && hour < 17
-    ? "Good Afternoon"
-    : hour >= 17 && hour < 21
-    ? "Good Evening"
-    : "Welcome";
+  const handleUpdateStatus = async (appId: number, status: string) => {
+    // Optimistic UI update
+    setApplications(apps => apps.map(app => app.id === appId ? { ...app, status } : app));
+    setSelectedApp(null);
+    
+    try {
+      const { applicationService } = await import('@/services/application.service');
+      await applicationService.updateApplicationStatus(appId, status);
+      await loadData();
+    } catch(e) {
+      console.error(e);
+      await loadData();
+    }
+  };
 
   const formatCurrency = (val: number | undefined) => {
     if (val === undefined || val === null) return "$0";
@@ -57,233 +103,589 @@ export default function BankDashboard() {
     return `$${val}`;
   };
 
+  const filteredMatches = useMemo(() => {
+    return matches.filter(match => {
+      const companyMatch = match.business?.company_name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const indMatch = industryFilter ? match.business?.industry === industryFilter : true;
+      const locMatch = locationFilter ? match.business?.country === locationFilter || match.business?.city === locationFilter : true;
+      const revMatch = minRevenue !== "" ? (match.business?.annual_revenue || 0) >= Number(minRevenue) : true;
+      const scoreMatch = minScore !== "" ? match.compatibility_score >= Number(minScore) : true;
+      const aiScoreMatch = minAiScore !== "" ? (match.business?.readiness_score || 0) >= Number(minAiScore) : true;
+      const fundMatch = maxFunding !== "" ? (match.business?.funding_goal || 0) <= Number(maxFunding) : true;
+      
+      return companyMatch && indMatch && locMatch && revMatch && scoreMatch && aiScoreMatch && fundMatch;
+    });
+  }, [matches, searchQuery, industryFilter, locationFilter, minRevenue, minScore, minAiScore, maxFunding]);
+
+  const kpis = useMemo(() => {
+    const eligible = matches.filter(m => m.compatibility_score >= 50).length;
+    const avgScore = matches.length ? Math.round(matches.reduce((acc, m) => acc + m.compatibility_score, 0) / matches.length) : 0;
+    const avgAiScore = matches.length ? Math.round(matches.reduce((acc, m) => acc + (m.business?.readiness_score || 0), 0) / matches.length) : 0;
+    
+    return {
+      eligible,
+      active: matches.length,
+      avgScore,
+      avgAiScore
+    };
+  }, [matches]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#0A0A0A] text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+      </div>
+    );
+  }
+
+  const industries = Array.from(new Set(matches.map(m => m.business?.industry).filter(Boolean)));
+
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-emerald-500/30">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-border/50 bg-card/30 backdrop-blur-xl flex-col hidden md:flex sticky top-0 h-screen overflow-y-auto">
-        {/* <div className="h-20 flex items-center px-6 border-b border-border/50">
+    <div className="flex min-h-screen bg-[#0A0A0A] text-zinc-100 selection:bg-emerald-500/30 font-sans">
+      {/* Sidebar - Stripe/Ramp inspired minimalism */}
+      <aside className="w-[240px] border-r border-zinc-800/50 bg-[#0F0F0F] flex-col hidden md:flex sticky top-0 h-screen overflow-y-auto">
+        {/* <div className="h-16 flex items-center px-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <div className="w-7 h-7 rounded bg-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
               <Building className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold tracking-tight text-lg">Partner Hub</span>
+            <span className="font-semibold tracking-tight text-sm text-zinc-100">FundBridge Partners</span>
           </div>
         </div> */}
         
-        <nav className="flex-1 p-4 space-y-1 mt-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">Overview</div>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-            <LayoutDashboard className="h-4 w-4" /> Dashboard
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2 px-3 mt-2">Overview</div>
+          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg bg-emerald-500/10 text-emerald-400">
+            <LayoutDashboard className="h-4 w-4" /> Deal Flow
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-muted/50 text-muted-foreground transition-colors group">
-            <Users className="h-4 w-4 group-hover:text-foreground transition-colors" /> Deal Flow <span className="ml-auto bg-emerald-500/20 text-emerald-500 text-[10px] px-2 py-0.5 rounded-full">New</span>
+          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
+            <Users className="h-4 w-4" /> Portfolio
           </a>
           
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 mt-8 px-3">Settings</div>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-muted/50 text-muted-foreground transition-colors group">
-            <Target className="h-4 w-4 group-hover:text-foreground transition-colors" /> Rules Engine
+          <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2 mt-8 px-3">Configuration</div>
+          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
+            <Target className="h-4 w-4" /> Rules Engine
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl hover:bg-muted/50 text-muted-foreground transition-colors group">
-            <Settings className="h-4 w-4 group-hover:text-foreground transition-colors" /> Preferences
+          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
+            <Settings className="h-4 w-4" /> Settings
           </a>
         </nav>
       </aside>
       
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Subtle background glow */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-        {/* <header className="h-20 border-b border-border/50 bg-background/80 backdrop-blur-xl flex items-center px-8 justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-emerald-900 to-emerald-700 flex items-center justify-center text-emerald-100 font-bold border border-emerald-500/30">
-              {data?.institution_name?.substring(0, 2).toUpperCase() || "GF"}
+      <main className="flex-1 flex flex-col min-w-0 relative">
+        {/* <header className="h-16 border-b border-zinc-800/50 bg-[#0A0A0A]/80 backdrop-blur-md flex items-center px-8 justify-between sticky top-0 z-20">
+          <h1 className="text-sm font-medium text-zinc-200">{data?.institution_name} • Deal Flow</h1>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-medium border border-zinc-700">
+              {data?.institution_name?.substring(0, 2).toUpperCase()}
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{data?.institution_type}</p>
-              <h1 className="text-sm font-semibold">{data?.institution_name}</h1>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <button className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors border border-border/50">
-              <Search className="h-4 w-4 text-muted-foreground" />
-            </button>
-            <button className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors border border-border/50">
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </button>
           </div>
         </header> */}
         
-        <div className="p-8 space-y-8 flex-1 overflow-y-auto z-10">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-            <h1 className="text-3xl font-bold tracking-tight">{greeting}, <span className="text-emerald-500">{data?.institution_name?.split(" ")[0]}</span></h1>
-            <p className="text-muted-foreground mt-1">Here's the latest overview of your lending pipeline and matching criteria.</p>
-          </motion.div>
-
+        <div className="p-8 max-w-[1200px] w-full mx-auto space-y-8">
+          
           {/* Top KPI Cards */}
-          <div className="grid md:grid-cols-4 gap-4">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }} className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                  <BadgeDollarSign className="h-5 w-5" />
-                </div>
-                <span className="text-xs font-medium text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full">Active</span>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors">
+              <p className="text-xs font-medium text-zinc-400 mb-2">Eligible Borrowers</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-semibold">{kpis.eligible}</h3>
+                <span className="text-[10px] text-emerald-500 font-medium px-1.5 py-0.5 rounded bg-emerald-500/10">High Fit</span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Loan Range</p>
-              <h3 className="text-xl font-bold mt-1">
-                {formatCurrency(data?.min_loan_amount)} - {formatCurrency(data?.max_loan_amount)}
-              </h3>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
-                  <Percent className="h-5 w-5" />
-                </div>
+            </div>
+            <div className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors">
+              <p className="text-xs font-medium text-zinc-400 mb-2">Total Deal Flow</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-semibold">{kpis.active}</h3>
+                <span className="text-[10px] text-zinc-500 font-medium">applications</span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Interest Rate Range</p>
-              <h3 className="text-xl font-bold mt-1">
-                {data?.min_interest_rate || 0}% - {data?.max_interest_rate || 0}%
-              </h3>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.3 }} className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow group">
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
-                  <Target className="h-5 w-5" />
-                </div>
+            </div>
+            <div className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors">
+              <p className="text-xs font-medium text-zinc-400 mb-2">Avg. Compatibility</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-semibold text-emerald-400">{kpis.avgScore}%</h3>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Min. AI Score</p>
-              <h3 className="text-2xl font-bold mt-1">{data?.requirements?.min_readiness_score || "N/A"}</h3>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.4 }} className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                  <HeartPulse className="h-5 w-5" />
-                </div>
+            </div>
+            <div className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors">
+              <p className="text-xs font-medium text-zinc-400 mb-2">Avg. AI Readiness</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-2xl font-semibold text-blue-400">{kpis.avgAiScore}</h3>
+                <span className="text-[10px] text-zinc-500 font-medium">/ 100</span>
               </div>
-              <p className="text-sm font-medium text-muted-foreground">Eligible Businesses</p>
-              <h3 className="text-3xl font-bold mt-1 text-emerald-500">1,204</h3>
-            </motion.div>
+            </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Main Configuration Details */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="lg:col-span-2 space-y-6">
-              <div className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl">
-                <h2 className="text-lg font-semibold flex items-center gap-2 mb-6">
-                  <Settings className="w-5 h-5 text-emerald-500" /> Eligibility Rules Engine
-                </h2>
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Minimum Revenue</p>
-                    <p className="text-lg font-medium">{formatCurrency(data?.requirements?.min_revenue)}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Max Debt-to-Revenue</p>
-                    <p className="text-lg font-medium">{data?.requirements?.max_debt_to_revenue_ratio || 0}%</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Min Years in Business</p>
-                    <p className="text-lg font-medium">{data?.requirements?.min_years_in_business || 0} Years</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">GST Registration Required</p>
-                    <p className="text-lg font-medium">{data?.requirements?.gst_registered_only ? "Yes" : "No"}</p>
+          {/* Main Section */}
+          <div className="space-y-4">
+            <div className="flex border-b border-zinc-800 mb-6">
+              <button 
+                onClick={() => setActiveTab("applications")}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'applications' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-400 hover:text-zinc-200'}`}
+              >
+                Incoming Applications
+              </button>
+              <button 
+                onClick={() => setActiveTab("matches")}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === 'matches' ? 'border-emerald-500 text-emerald-400' : 'border-transparent text-zinc-400 hover:text-zinc-200'}`}
+              >
+                Matching Deal Flow
+              </button>
+            </div>
+
+            {activeTab === 'matches' && (
+              <>
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex flex-wrap items-center gap-3 w-full">
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                      <input 
+                        type="text" 
+                        placeholder="Search companies..." 
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        className="h-9 w-48 bg-[#121212] border border-zinc-800 rounded-lg pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
+                      />
+                    </div>
+                    <div className="relative">
+                      <select
+                        value={industryFilter}
+                        onChange={e => setIndustryFilter(e.target.value)}
+                        className="h-9 appearance-none bg-[#121212] border border-zinc-800 rounded-lg pl-4 pr-10 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200"
+                      >
+                        <option value="">All Industries</option>
+                        {industries.map(ind => <option key={ind as string} value={ind as string}>{ind as string}</option>)}
+                      </select>
+                      <Filter className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                    </div>
+                    <input 
+                      type="number" 
+                      placeholder="Min Revenue" 
+                      value={minRevenue}
+                      onChange={e => setMinRevenue(e.target.value ? Number(e.target.value) : "")}
+                      className="h-9 w-32 bg-[#121212] border border-zinc-800 rounded-lg px-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Max Funding" 
+                      value={maxFunding}
+                      onChange={e => setMaxFunding(e.target.value ? Number(e.target.value) : "")}
+                      className="h-9 w-32 bg-[#121212] border border-zinc-800 rounded-lg px-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Min Match %" 
+                      value={minScore}
+                      onChange={e => setMinScore(e.target.value ? Number(e.target.value) : "")}
+                      className="h-9 w-28 bg-[#121212] border border-zinc-800 rounded-lg px-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
+                    />
+                    <input 
+                      type="number" 
+                      placeholder="Min AI Score" 
+                      value={minAiScore}
+                      onChange={e => setMinAiScore(e.target.value ? Number(e.target.value) : "")}
+                      className="h-9 w-32 bg-[#121212] border border-zinc-800 rounded-lg px-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
+                    />
                   </div>
                 </div>
-              </div>
 
-              <div className="p-6 bg-card/40 backdrop-blur-sm border border-border/50 rounded-2xl">
-                <h2 className="text-lg font-semibold flex items-center gap-2 mb-6">
-                  <Briefcase className="w-5 h-5 text-emerald-500" /> Lending Products & Preferences
-                </h2>
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-3">Products Offered</p>
-                    <div className="flex flex-wrap gap-2">
-                      {data?.loan_products?.map((prod: string) => (
-                        <span key={prod} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-sm font-medium">
-                          {prod}
-                        </span>
-                      ))}
+                {filteredMatches.length === 0 ? (
+                  <div className="p-12 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-center mt-4">
+                    <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
+                      <Search className="w-5 h-5 text-zinc-600" />
                     </div>
+                    <h3 className="text-sm font-medium text-zinc-300">No matches found</h3>
+                    <p className="text-xs text-zinc-500 mt-1">Try adjusting your filters or wait for new applications.</p>
                   </div>
-                  
-                  <div className="grid sm:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-                        <MapPin className="w-4 h-4" /> Locations
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {data?.requirements?.preferred_locations?.map((loc: string) => (
-                          <span key={loc} className="px-3 py-1 bg-muted/50 border border-border/50 rounded-lg text-sm">
-                            {loc}
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                    {filteredMatches.map((match) => (
+                      <div 
+                        key={match.id} 
+                        className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors flex flex-col group relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => setSelectedMatch(match)} className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                            View Details
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
+                              {match.business?.company_name.substring(0,2).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-zinc-100 group-hover:text-emerald-400 transition-colors">{match.business?.company_name}</h3>
+                              <p className="text-[11px] text-zinc-500">{match.business?.industry} • {match.business?.city}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-y-4 gap-x-2 mt-2 flex-1">
+                          <div>
+                            <p className="text-[10px] text-zinc-500 uppercase">Revenue</p>
+                            <p className="text-sm font-medium text-zinc-300">{formatCurrency(match.business?.annual_revenue)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-zinc-500 uppercase">Funding Req.</p>
+                            <p className="text-sm font-medium text-zinc-300">{formatCurrency(match.business?.funding_goal)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-zinc-500 uppercase">AI Score</p>
+                            <p className="text-sm font-medium text-blue-400">{match.business?.readiness_score}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-zinc-500 uppercase">Approval Prob. (ML)</p>
+                            <p className="text-sm font-medium text-purple-400">
+                              {match.compatibility_score > 80 ? "High" : match.compatibility_score > 50 ? "Medium" : "Low"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 mt-4 border-t border-zinc-800/50 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                              <Percent className="w-4 h-4 text-emerald-500" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-zinc-500 uppercase">Match Score</p>
+                              <p className="text-sm font-bold text-emerald-400">{match.compatibility_score}%</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-zinc-500">{match.recommendation}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'applications' && (
+              <div className="grid grid-cols-1 gap-4">
+                {applications.length === 0 ? (
+                  <div className="p-12 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-center">
+                    <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
+                      <FileText className="w-5 h-5 text-zinc-600" />
+                    </div>
+                    <h3 className="text-sm font-medium text-zinc-300">No applications yet</h3>
+                    <p className="text-xs text-zinc-500 mt-1">Wait for businesses to apply to your bank.</p>
+                  </div>
+                ) : (
+                  applications.map(app => (
+                    <div key={app.id} className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer" onClick={() => setSelectedApp(app)}>
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
+                          {app.business?.company_name?.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-zinc-100">{app.business?.company_name}</h3>
+                          <p className="text-xs text-zinc-400 mt-1">{app.business?.industry} • {app.business?.city}, {app.business?.country}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Requested</p>
+                          <p className="text-sm font-semibold text-zinc-200">{formatCurrency(app.amount_requested)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Status</p>
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wide
+                            ${app.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
+                              app.status === 'under_review' ? 'bg-blue-500/10 text-blue-500' :
+                              app.status === 'waitlisted' ? 'bg-purple-500/10 text-purple-500' :
+                              app.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
+                              app.status === 'withdrawn' ? 'bg-zinc-500/10 text-zinc-400' :
+                              'bg-red-500/10 text-red-500'
+                            }
+                          `}>
+                            {app.status.replace('_', ' ')}
                           </span>
-                        ))}
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-zinc-600" />
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-                        <Building className="w-4 h-4" /> Industries
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {data?.requirements?.preferred_industries?.map((ind: string) => (
-                          <span key={ind} className="px-3 py-1 bg-muted/50 border border-border/50 rounded-lg text-sm">
-                            {ind}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  ))
+                )}
               </div>
-            </motion.div>
-
-            {/* Right column: Active Applications */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.4 }} className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Live Deal Flow</h2>
-                <button className="text-sm text-emerald-500 hover:text-emerald-400 font-medium">View All</button>
-              </div>
-              
-              <div className="space-y-3">
-                {[
-                  { name: "TechNova Solutions", type: "Working Capital", amount: "$250k", match: 98 },
-                  { name: "Atlas Manufacturing", type: "Equipment Financing", amount: "$1.2M", match: 94 },
-                  { name: "Zenith Retail", type: "Line of Credit", amount: "$500k", match: 91 },
-                  { name: "Lumina Health", type: "Business Expansion", amount: "$2M", match: 88 },
-                ].map((deal, i) => (
-                  <div key={i} className="p-4 bg-card/40 backdrop-blur-sm border border-border/50 rounded-xl hover:bg-muted/30 transition-colors cursor-pointer group flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-sm group-hover:text-emerald-400 transition-colors">{deal.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">{deal.type} • {deal.amount}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <span className="text-sm font-bold text-emerald-500">{deal.match}%</span>
-                        <p className="text-[10px] text-muted-foreground uppercase">Match</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 p-5 bg-gradient-to-br from-emerald-900/40 to-teal-900/40 border border-emerald-500/20 rounded-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl pointer-events-none" />
-                <h3 className="font-semibold mb-1">Expand Your Reach</h3>
-                <p className="text-sm text-emerald-100/70 mb-4">Adjust your rules engine to match with 450+ more businesses currently seeking capital.</p>
-                <button className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
-                  Tune Rules Engine
-                </button>
-              </div>
-            </motion.div>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Detail Drawer */}
+      <AnimatePresence>
+        {selectedMatch && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedMatch(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-[600px] bg-[#0F0F0F] border-l border-zinc-800 z-50 overflow-y-auto shadow-2xl flex flex-col"
+            >
+              <div className="sticky top-0 bg-[#0F0F0F]/80 backdrop-blur-xl border-b border-zinc-800 px-6 py-4 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
+                    {selectedMatch.business?.company_name.substring(0,2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-100">{selectedMatch.business?.company_name}</h2>
+                    <p className="text-xs text-zinc-500">{selectedMatch.business?.industry} • {selectedMatch.business?.years_in_operation} years in operation</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedMatch(null)} className="p-2 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-8 flex-1">
+                
+                {/* Score Header */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                      <Percent className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-emerald-500/70 uppercase">Compatibility</p>
+                      <h3 className="text-2xl font-bold text-emerald-400">{selectedMatch.compatibility_score}%</h3>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-blue-500/70 uppercase">AI Readiness</p>
+                      <h3 className="text-2xl font-bold text-blue-400">{selectedMatch.business?.readiness_score}</h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Lending Fit Summary</h3>
+                  <div className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 text-sm text-zinc-300 leading-relaxed">
+                    {selectedMatch.business?.ai_summary || "No AI summary available."}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-emerald-400 border-b border-emerald-900 pb-2 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" /> Passed Rules ({selectedMatch.passed_rules?.length || 0})
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedMatch.passed_rules?.map((rule: string, i: number) => (
+                        <li key={i} className="text-sm text-zinc-400 flex items-start gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                          {rule}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-rose-400 border-b border-rose-900 pb-2 flex items-center gap-2">
+                      <XCircle className="w-4 h-4" /> Failed Rules ({selectedMatch.failed_rules?.length || 0})
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedMatch.failed_rules?.length === 0 && <li className="text-sm text-zinc-500 italic">None</li>}
+                      {selectedMatch.failed_rules?.map((rule: string, i: number) => (
+                        <li key={i} className="text-sm text-zinc-400 flex items-start gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                          {rule}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Financial Snapshot</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Annual Revenue</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedMatch.business?.annual_revenue)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Existing Debt</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedMatch.business?.existing_debt)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Monthly Cash Flow</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedMatch.business?.monthly_cash_flow)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Credit Score</p>
+                      <p className="font-medium text-zinc-200">{selectedMatch.business?.business_credit_score}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Funding Request</h3>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-zinc-800/80 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-zinc-500">Requested Amount</p>
+                      <h4 className="text-xl font-bold text-zinc-100">{formatCurrency(selectedMatch.business?.funding_goal)}</h4>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-zinc-500">Purpose</p>
+                      <p className="font-medium text-zinc-200">{selectedMatch.business?.funding_purpose}</p>
+                      <p className="text-[10px] text-zinc-500">{selectedMatch.business?.loan_type}</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-6 border-t border-zinc-800 bg-[#0A0A0A] flex items-center gap-4 sticky bottom-0">
+                <button onClick={() => setSelectedMatch(null)} className="flex-1 h-10 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-medium transition-colors">
+                  Close Details
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Application Detail Drawer */}
+      <AnimatePresence>
+        {selectedApp && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedApp(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              className="fixed right-0 top-0 bottom-0 w-full max-w-[600px] bg-[#0F0F0F] border-l border-zinc-800 z-50 overflow-y-auto shadow-2xl flex flex-col"
+            >
+              <div className="sticky top-0 bg-[#0F0F0F]/80 backdrop-blur-xl border-b border-zinc-800 px-6 py-4 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
+                    {selectedApp.business?.company_name?.substring(0,2).toUpperCase()}
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-zinc-100">{selectedApp.business?.company_name}</h2>
+                    <p className="text-xs text-zinc-500">{selectedApp.business?.industry} • {selectedApp.business?.years_in_operation} years in operation</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedApp(null)} className="p-2 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400 hover:text-white">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-8 flex-1">
+                
+                {/* Score Header */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-4">
+                    <div className="h-12 w-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                      <Target className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-blue-500/70 uppercase">AI Readiness</p>
+                      <h3 className="text-2xl font-bold text-blue-400">{selectedApp.business?.readiness_score}</h3>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-zinc-800/50 border border-zinc-800 rounded-xl flex flex-col justify-center">
+                    <p className="text-[10px] text-zinc-500 uppercase font-medium">Application Status</p>
+                    <span className={`mt-1 inline-flex w-max px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide
+                      ${selectedApp.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                        selectedApp.status === 'under_review' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                        selectedApp.status === 'waitlisted' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' :
+                        selectedApp.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                        selectedApp.status === 'withdrawn' ? 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20' :
+                        'bg-red-500/10 text-red-500 border border-red-500/20'
+                      }
+                    `}>
+                      {selectedApp.status.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Lending Fit Summary</h3>
+                  <div className="p-4 bg-zinc-900 rounded-lg border border-zinc-800 text-sm text-zinc-300 leading-relaxed">
+                    {selectedApp.business?.ai_summary || "No AI summary available."}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Financial Snapshot</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Annual Revenue</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedApp.business?.annual_revenue)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Existing Debt</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedApp.business?.existing_debt)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Monthly Cash Flow</p>
+                      <p className="font-medium text-zinc-200">{formatCurrency(selectedApp.business?.monthly_cash_flow)}</p>
+                    </div>
+                    <div className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80">
+                      <p className="text-xs text-zinc-500">Credit Score</p>
+                      <p className="font-medium text-zinc-200">{selectedApp.business?.business_credit_score}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Funding Request</h3>
+                  <div className="p-4 bg-[#121212] rounded-lg border border-zinc-800/80 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-zinc-500">Requested Amount</p>
+                      <h4 className="text-xl font-bold text-zinc-100">{formatCurrency(selectedApp.amount_requested)}</h4>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-zinc-500">Purpose</p>
+                      <p className="font-medium text-zinc-200">{selectedApp.purpose}</p>
+                      <p className="text-[10px] text-zinc-500">{selectedApp.business?.loan_type}</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div className="p-6 border-t border-zinc-800 bg-[#0A0A0A] flex items-center gap-4 sticky bottom-0">
+                {selectedApp.status === 'withdrawn' ? (
+                  <button onClick={() => setSelectedApp(null)} className="flex-1 h-10 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-sm font-medium transition-colors">
+                    Close Details
+                  </button>
+                ) : (
+                  <>
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} className="flex-1 h-10 bg-zinc-800 hover:bg-red-500/20 text-white hover:text-red-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-red-500/30">
+                      Reject
+                    </button>
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'waitlisted')} className="flex-1 h-10 bg-zinc-800 hover:bg-purple-500/20 text-white hover:text-purple-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-purple-500/30">
+                      Waitlist
+                    </button>
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'approved')} className="flex-1 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                      Approve Application
+                    </button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

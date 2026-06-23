@@ -62,5 +62,21 @@ export const BusinessService = {
   async getDashboard() {
     const response = await api.get('/business/dashboard');
     return response.data;
+  },
+
+  getMatches: async (): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const response = await api.get('/business/matches', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  generateAiReport: async (): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const response = await api.post('/business/generate-report', {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   }
 };

@@ -32,5 +32,10 @@ export const BankService = {
   async getDashboard() {
     const response = await api.get('/bank/dashboard');
     return response.data;
+  },
+  
+  async getMatches() {
+    const response = await api.get('/bank/matches');
+    return response.data;
   }
 };
