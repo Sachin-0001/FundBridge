@@ -1,9 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config.settings import settings
-
-# In a real app we would import routers here and include them
-# from app.api.api_v1 import api_router
+import app.models
+from app.api.api_v1 import api_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -21,6 +20,6 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    return {"status": "ok", "project": settings.PROJECT_NAME}
+    return {"success": True, "message": "Server is healthy", "data": {"status": "ok", "project": settings.PROJECT_NAME}}
 
-# app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_router, prefix=settings.API_V1_STR)

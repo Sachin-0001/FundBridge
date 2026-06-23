@@ -1,21 +1,22 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
+from app.models.user import UserRole
 
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: Optional[str] = None
-    is_active: bool = True
-    is_superuser: bool = False
+    role: UserRole
 
 class UserCreate(UserBase):
     password: str
 
-class UserUpdate(UserBase):
-    password: Optional[str] = None
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 class UserInDBBase(UserBase):
     id: int
+    is_verified: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -24,5 +25,12 @@ class UserInDBBase(UserBase):
 class User(UserInDBBase):
     pass
 
-class UserInDB(UserInDBBase):
-    hashed_password: str
+class UserWithProfile(UserInDBBase):
+    profile: Optional[Any] = None
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenPayload(BaseModel):
+    sub: Optional[int] = None
