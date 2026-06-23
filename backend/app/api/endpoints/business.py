@@ -120,4 +120,67 @@ async def generate_ai_report(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+from pydantic import BaseModel
+from typing import List, Dict
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    history: List[ChatMessage] = []
+
+@router.post("/chat", response_model=dict)
+async def chat_with_ai(
+    request: ChatRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+
+    load_dotenv()
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        raise HTTPException(status_code=500, detail="GROQ API key not configured")
+
+    client = AsyncGroq(api_key=groq_api_key)
+
+    system_prompt = f"""
+    You are an AI Funding Advisor for FundBridge, talking directly to a business owner.
+    Use this business profile context to answer their questions accurately and helpfully.
+    Keep your answers concise, professional, and directly relevant to their funding situation.
+    Do NOT use markdown headers unless necessary. Use bullet points and paragraphs.
+
+    Business Context:
+    Company: {business.company_name} ({business.industry})
+    Years in Operation: {business.years_in_operation}
+    Revenue: ${business.annual_revenue} | Profit: ${business.annual_net_profit}
+    Debt: ${business.existing_debt} | Cash Flow: ${business.monthly_cash_flow}
+    Credit Score: {business.business_credit_score}
+    Goal: ${business.funding_goal} for {business.funding_purpose} ({business.loan_type})
+    """
+
+    messages = [{"role": "system", "content": system_prompt}]
+    
+    for msg in request.history:
+        messages.append({"role": msg.role, "content": msg.content})
+        
+    messages.append({"role": "user", "content": request.message})
+
+    try:
+        chat_completion = await client.chat.completions.create(
+            messages=messages,
+            model="llama-3.1-8b-instant",
+            temperature=0.7,
+            max_tokens=500
+        )
+        reply = chat_completion.choices[0].message.content
+        return {"success": True, "reply": reply}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
