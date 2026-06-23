@@ -78,5 +78,13 @@ export const BusinessService = {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
+  },
+
+  sendChatMessage: async (message: string, history: any[]): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const response = await api.post('/business/chat', { message, history }, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
   }
 };

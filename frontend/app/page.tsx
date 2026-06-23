@@ -6,7 +6,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { SegmentedToggle } from "@/components/ui/SegmentedToggle";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, ArrowLeft, BarChart3, CheckCircle2, ShieldCheck, Zap, Network, LineChart, Users } from "lucide-react";
+import { ArrowRight, ArrowLeft, BarChart3, CheckCircle2, ShieldCheck, Zap, Network, LineChart, Users, LayoutDashboard, FileText, Landmark, Settings } from "lucide-react";
 import Link from "next/link";
 import { TimelineScroller } from "@/components/ui/TimelineScroller";
 
@@ -86,6 +86,8 @@ export default function Home() {
 }
 
 function BusinessLanding() {
+  const [mockTab, setMockTab] = useState<'overview' | 'applications' | 'matches' | 'edit_profile'>('overview');
+
   return (
     <div className="flex flex-col gap-24 pb-20">
       {/* Hero Section */}
@@ -101,8 +103,8 @@ function BusinessLanding() {
             Our AI-powered platform analyzes your financial health, scores your readiness, and matches you with top-tier banks tailored to your exact profile.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link href="/borrow" passHref>
-              <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-primary/25 transition-transform hover:scale-105">
+            <Link href="/register" passHref>
+              <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -112,32 +114,161 @@ function BusinessLanding() {
           </div>
         </div>
         <div className="w-full max-w-5xl relative mt-8 lg:mt-12">
-          <div className="relative rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden aspect-square lg:aspect-[4/3] flex items-center justify-center">
-            {/* Abstract Illustration */}
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
-            <div className="relative grid grid-cols-2 gap-4 p-8 w-full h-full">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-background rounded-xl p-4 shadow-sm border border-border/50 flex flex-col justify-between">
-                 <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary"><BarChart3 className="h-4 w-4" /></div>
-                 <div>
-                   <div className="text-sm text-muted-foreground">AI Match Score</div>
-                   <div className="text-2xl font-bold">94%</div>
-                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-background rounded-xl p-4 shadow-sm border border-border/50 flex flex-col justify-between">
-                 <div className="h-8 w-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500"><CheckCircle2 className="h-4 w-4" /></div>
-                 <div>
-                   <div className="text-sm text-muted-foreground">Status</div>
-                   <div className="text-lg font-bold text-green-500">Pre-Approved</div>
-                 </div>
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="col-span-2 bg-background rounded-xl p-4 shadow-sm border border-border/50">
-                 <div className="h-4 w-1/3 bg-muted rounded mb-4" />
-                 <div className="space-y-2">
-                   <div className="h-2 w-full bg-muted rounded" />
-                   <div className="h-2 w-4/5 bg-muted rounded" />
-                   <div className="h-2 w-full bg-muted rounded" />
-                 </div>
-              </motion.div>
+          {/* Interactive Notice */}
+          <div className="absolute -top-3 sm:-top-5 -right-2 sm:-right-5 z-20 bg-background/80 border border-blue-500/30 text-blue-400 text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Interactive Demo • Click the sidebar
+          </div>
+          <div className="relative rounded-2xl border border-zinc-800 bg-[#0A0A0A] shadow-2xl overflow-hidden aspect-square lg:aspect-[4/3] flex flex-row">
+            {/* Mock Dashboard Sidebar */}
+            <div className="w-[180px] border-r border-zinc-800/80 bg-[#0F0F0F] flex flex-col p-4 shrink-0 hidden sm:flex">
+              <div className="text-[10px] font-medium text-zinc-500 mb-2 uppercase tracking-wider">Workspace</div>
+              <nav className="space-y-1">
+                <button onClick={() => setMockTab('overview')} className={`flex items-center gap-2 w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-left ${mockTab === 'overview' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
+                  <LayoutDashboard className="w-3.5 h-3.5" /> Overview
+                </button>
+                <button onClick={() => setMockTab('applications')} className={`flex items-center gap-2 w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-left ${mockTab === 'applications' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
+                  <FileText className="w-3.5 h-3.5" /> Applications
+                </button>
+                <button onClick={() => setMockTab('matches')} className={`flex justify-between items-center w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-left ${mockTab === 'matches' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
+                  <div className="flex items-center gap-2">
+                    <Landmark className="w-3.5 h-3.5" /> Matches
+                  </div>
+                  <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1 rounded">12</span>
+                </button>
+              </nav>
+              <div className="mt-6">
+                <div className="text-[10px] font-medium text-zinc-500 mb-2 uppercase tracking-wider">Quick Actions</div>
+                <nav className="space-y-1">
+                  <button onClick={() => setMockTab('edit_profile')} className={`flex items-center gap-2 w-full px-2 py-1.5 text-xs font-medium rounded-md transition-colors text-left ${mockTab === 'edit_profile' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
+                    <Settings className="w-3.5 h-3.5" /> Edit Profile
+                  </button>
+                </nav>
+              </div>
+            </div>
+
+            {/* Mock Dashboard Main Content */}
+            <div className="flex-1 p-6 flex flex-col gap-6 relative text-left overflow-y-auto">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+              
+              <AnimatePresence mode="wait">
+                {mockTab === 'overview' && (
+                  <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+                    <div className="relative">
+                      <h3 className="text-lg font-bold text-zinc-100 mb-3">Financial Snapshot</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-[#121212] border border-zinc-800/80 rounded-lg">
+                          <p className="text-[9px] text-zinc-500 uppercase mb-1">Annual Revenue</p>
+                          <p className="font-semibold text-zinc-200 text-sm">$1,000,000</p>
+                        </div>
+                        <div className="p-3 bg-[#121212] border border-zinc-800/80 rounded-lg">
+                          <p className="text-[9px] text-zinc-500 uppercase mb-1">Net Profit</p>
+                          <p className="font-semibold text-blue-400 text-sm">$75,000</p>
+                        </div>
+                        <div className="p-3 bg-[#121212] border border-zinc-800/80 rounded-lg">
+                          <p className="text-[9px] text-zinc-500 uppercase mb-1">Existing Debt</p>
+                          <p className="font-semibold text-amber-500 text-sm">$10,000</p>
+                        </div>
+                        <div className="p-3 bg-[#121212] border border-zinc-800/80 rounded-lg">
+                          <p className="text-[9px] text-zinc-500 uppercase mb-1">Credit Score</p>
+                          <p className="font-semibold text-blue-400 text-sm">700</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative p-4 bg-blue-500/5 border border-blue-500/10 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-blue-500/10 rounded border border-blue-500/20 text-blue-400 shrink-0">
+                          <Zap className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-semibold text-zinc-200 mb-1">AI Match Score: 94%</h4>
+                          <p className="text-[10px] text-zinc-400 leading-relaxed">Your strong cash flow and low debt make you an excellent candidate for term loans. Pre-approved for 12 lenders.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <h4 className="text-xs font-bold text-zinc-100">Top Matched Lenders</h4>
+                      {[1, 2].map((i) => (
+                        <div key={i} className="bg-[#121212] border border-zinc-800/80 rounded-lg p-3 flex items-center justify-between hover:border-zinc-700 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 font-bold shadow-inner text-xs">
+                              L{i}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-zinc-100 text-xs">Premium Lender {i}</h4>
+                              <p className="text-[9px] text-zinc-500">Commercial Bank</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-sm font-bold text-blue-400">{96 - i}%</span>
+                            <p className="text-[8px] text-blue-500/70 uppercase font-medium">Match Fit</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                {mockTab === 'applications' && (
+                  <motion.div key="apps" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                    <h3 className="text-lg font-bold text-zinc-100">Applications</h3>
+                    {[1, 2].map((i) => (
+                      <div key={i} className="bg-[#121212] border border-zinc-800/80 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400">B{i}</div>
+                          <div>
+                            <div className="text-xs font-medium text-zinc-200">Global Tech Bank {i}</div>
+                            <div className="text-[10px] text-zinc-500">Term Loan • $500,000</div>
+                          </div>
+                        </div>
+                        <div className="px-2 py-1 bg-yellow-500/10 text-yellow-500 text-[10px] font-medium rounded">Pending</div>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {mockTab === 'matches' && (
+                  <motion.div key="matches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                    <h3 className="text-lg font-bold text-zinc-100">Matched Lenders</h3>
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-[#121212] border border-zinc-800/80 rounded-lg p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400">L{i}</div>
+                          <div>
+                            <div className="text-xs font-medium text-zinc-200">Premium Lender {i}</div>
+                            <div className="text-[10px] text-zinc-500">Match Score: {95 - i}%</div>
+                          </div>
+                        </div>
+                        <button className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium rounded transition-colors">Apply</button>
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
+
+                {mockTab === 'edit_profile' && (
+                  <motion.div key="edit" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4">
+                    <h3 className="text-lg font-bold text-zinc-100">Edit Profile</h3>
+                    <div className="bg-[#121212] border border-zinc-800/80 rounded-lg p-4 space-y-3">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-zinc-500 uppercase">Company Name</label>
+                        <div className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-300">Acme Corp</div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-zinc-500 uppercase">Annual Revenue</label>
+                        <div className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-300">$1,000,000</div>
+                      </div>
+                      <div className="pt-2">
+                        <button className="w-full py-1.5 bg-blue-500 text-white text-xs font-medium rounded transition-colors">Save Changes</button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -179,7 +310,7 @@ function BusinessLanding() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/borrow" passHref>
-            <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-primary/25 transition-transform hover:scale-105">
+            <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -221,6 +352,14 @@ function BankLanding() {
           </div>
         </div>
         <div className="w-full max-w-5xl relative mt-8 lg:mt-12">
+          {/* Interactive Notice */}
+          <div className="absolute -top-3 sm:-top-5 -right-2 sm:-right-5 z-20 bg-background/80 border border-emerald-500/30 text-emerald-500 text-[10px] sm:text-xs font-medium px-3 py-1.5 rounded-full backdrop-blur-md shadow-lg flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Interactive Demo • Click the profiles
+          </div>
           <div className="relative rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-2xl overflow-hidden aspect-square lg:aspect-[4/3] flex flex-col">
              <div className="border-b border-border/50 bg-muted/30 p-4 flex gap-2">
                <div className="h-3 w-3 rounded-full bg-red-500/80" />

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 
 export type Role = "BUSINESS" | "BANK" | "ADMIN";
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -89,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("token");
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
+    queryClient.clear();
     router.push("/login");
   };
 

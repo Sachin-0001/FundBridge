@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -11,11 +11,12 @@ import {
   Search, Zap, Target, TrendingUp,
   CheckCircle2, UploadCloud, ChevronRight, Check,
   Activity, ArrowRight, Percent, Shield, DollarSign,
-  X, Briefcase, CreditCard, ChevronDown, Award
+  X, Briefcase, CreditCard, ChevronDown, Award, Send, MessageSquare, Settings, Save
 } from "lucide-react";
 
-import { BusinessService } from "@/services/business.service";
+import { BusinessService, FundingPurpose, LoanType } from "@/services/business.service";
 import { applicationService } from "@/services/application.service";
+import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from 'react-markdown';
 
 const formatCurrency = (val: number | undefined) => {
@@ -81,11 +82,48 @@ const CircularProgress = ({ value, label }: { value: number, label: string }) =>
 };
 
 export default function BusinessDashboard() {
+  const { refreshUser } = useAuth();
   const queryClient = useQueryClient();
   const [selectedBank, setSelectedBank] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [aiReport, setAiReport] = useState<string | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{role: string, content: string}[]>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+
+  const [editFormData, setEditFormData] = useState<any>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages, isChatLoading]);
+
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+    
+    const newMessage = { role: "user", content: chatInput };
+    const history = [...chatMessages];
+    setChatMessages(prev => [...prev, newMessage]);
+    setChatInput("");
+    setIsChatLoading(true);
+    
+    try {
+      const response = await BusinessService.sendChatMessage(newMessage.content, history);
+      setChatMessages(prev => [...prev, { role: "assistant", content: response.reply }]);
+    } catch (err) {
+      console.error("Chat error:", err);
+      setChatMessages(prev => [...prev, { role: "assistant", content: "Sorry, I'm having trouble connecting right now. Please try again." }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
 
   const { data: dashboardRes, isLoading: loadingDash } = useQuery({
     queryKey: ['businessDashboard'],
@@ -103,10 +141,32 @@ export default function BusinessDashboard() {
   });
 
   const data = dashboardRes?.data;
-  const matches = matchesRes?.data || [];
+  const matches = (matchesRes?.data || []).filter((m: any) => m.compatibility_score > 75);
   const applications = appsRes || [];
   
   const loading = loadingDash || loadingMatches;
+
+  useEffect(() => {
+    if (data && !editFormData) {
+      setEditFormData(data);
+    }
+  }, [data]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    try {
+      await BusinessService.register(editFormData);
+      await queryClient.invalidateQueries({ queryKey: ['businessDashboard'] });
+      await queryClient.invalidateQueries({ queryKey: ['businessMatches'] });
+      await refreshUser(); // Update AuthContext so navbar reflects new profile name
+      setActiveTab('overview');
+    } catch (err) {
+      console.error("Failed to save profile", err);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handleApply = async (bankId: number) => {
     // Optimistic UI update
@@ -249,6 +309,7 @@ export default function BusinessDashboard() {
                 </div>
                 {matches.length > 0 && <span className="text-[10px] bg-zinc-800 px-1.5 py-0.5 rounded text-zinc-300">{matches.length}</span>}
               </button>
+
             </nav>
           </div>
 
@@ -279,9 +340,9 @@ export default function BusinessDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-xs font-medium text-zinc-400 hidden sm:block">{currentDate}</div>
-            <button className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
+            {/* <button className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
               <Zap className="w-4 h-4" />
-            </button>
+            </button> */}
           </div>
         </header>
         
@@ -303,7 +364,7 @@ export default function BusinessDashboard() {
                     <p className="text-xs font-medium text-zinc-500 mb-1 uppercase tracking-wider">AI Readiness</p>
                     <div className="flex items-center gap-2">
                       <span className="flex items-center text-[10px] font-medium text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded">
-                        <TrendingUp className="w-3 h-3 mr-1" /> +5
+                        {/* <TrendingUp className="w-3 h-3 mr-1" /> +5 */}
                       </span>
                     </div>
                   </div>
@@ -370,7 +431,7 @@ export default function BusinessDashboard() {
                   
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500 relative">
-                      <Zap className="w-5 h-5" />
+                      {/* <Zap className="w-5 h-5" /> */}
                       <div className="absolute inset-0 bg-blue-500/20 blur-md rounded-full" />
                     </div>
                     <h3 className="text-sm font-semibold tracking-tight text-zinc-200 uppercase">AI Funding Advisor</h3>
@@ -389,8 +450,11 @@ export default function BusinessDashboard() {
                   </div>
                   
                   <div className="mt-6 flex gap-3">
-                    <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium transition-colors">
-                      View Full Analysis
+                    <button 
+                      onClick={() => setIsChatOpen(true)}
+                      className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-xs font-medium transition-colors"
+                    >
+                      Want to know more, talk with our AI
                     </button>
                   </div>
                 </div>
@@ -530,7 +594,7 @@ export default function BusinessDashboard() {
                 <Card className="p-6 mt-6 bg-blue-500/5 border-blue-500/10">
                   <div className="flex items-start gap-4">
                     <div className="p-3 bg-blue-500/10 rounded-lg text-blue-400">
-                      <Zap className="w-5 h-5" />
+                      {/* <Zap className="w-5 h-5" /> */}
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-zinc-200 mb-1">AI Profile Analysis</h4>
@@ -665,13 +729,105 @@ export default function BusinessDashboard() {
               </div>
             )}
 
-            {/* Edit Profile View */}
-            {activeTab === 'edit_profile' && (
+            {/* Edit Profile Tab Render */}
+            {activeTab === 'edit_profile' && editFormData && (
               <div className="space-y-6">
-                <h3 className="text-xl font-medium text-zinc-100">Edit Profile</h3>
-                <Card className="p-8">
-                  <p className="text-zinc-400">Profile editing functionality coming soon...</p>
-                </Card>
+                <div>
+                  <h3 className="text-xl font-medium text-zinc-100">Edit Profile</h3>
+                  <p className="text-zinc-400 text-sm mt-1">Update your financial and business details to get better matches.</p>
+                </div>
+
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Business Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Company Name</label>
+                        <input type="text" value={editFormData.company_name || ""} onChange={e => setEditFormData({...editFormData, company_name: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Industry</label>
+                        <input type="text" value={editFormData.industry || ""} onChange={e => setEditFormData({...editFormData, industry: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Years in Operation</label>
+                        <input type="number" value={editFormData.years_in_operation || 0} onChange={e => setEditFormData({...editFormData, years_in_operation: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Employee Count</label>
+                        <input type="number" value={editFormData.employee_count || 0} onChange={e => setEditFormData({...editFormData, employee_count: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Financial Overview</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Revenue ($)</label>
+                        <input type="number" value={editFormData.annual_revenue || 0} onChange={e => setEditFormData({...editFormData, annual_revenue: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Net Profit ($)</label>
+                        <input type="number" value={editFormData.annual_net_profit || 0} onChange={e => setEditFormData({...editFormData, annual_net_profit: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Existing Debt ($)</label>
+                        <input type="number" value={editFormData.existing_debt || 0} onChange={e => setEditFormData({...editFormData, existing_debt: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Monthly Cash Flow ($)</label>
+                        <input type="number" value={editFormData.monthly_cash_flow || 0} onChange={e => setEditFormData({...editFormData, monthly_cash_flow: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Credit Score</label>
+                        <input type="number" value={editFormData.business_credit_score || 0} onChange={e => setEditFormData({...editFormData, business_credit_score: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Funding Needs</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Funding Goal ($)</label>
+                        <input type="number" value={editFormData.funding_goal || 0} onChange={e => setEditFormData({...editFormData, funding_goal: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Funding Purpose</label>
+                        <select value={editFormData.funding_purpose || ""} onChange={e => setEditFormData({...editFormData, funding_purpose: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none">
+                          <option value="" disabled>Select a purpose...</option>
+                          {Object.values(FundingPurpose).map((purpose) => (
+                            <option key={purpose} value={purpose}>{purpose}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Preferred Loan Type</label>
+                        <select value={editFormData.loan_type || ""} onChange={e => setEditFormData({...editFormData, loan_type: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none">
+                          <option value="" disabled>Select loan type...</option>
+                          {Object.values(LoanType).map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-start pt-4">
+                    <button 
+                      type="submit" 
+                      disabled={isSavingProfile}
+                      className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      {isSavingProfile ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Updating Profile & AI...</>
+                      ) : (
+                        <><Save className="w-4 h-4" /> Save Changes</>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
 
@@ -787,15 +943,106 @@ export default function BusinessDashboard() {
               </div>
 
               <div className="p-6 border-t border-zinc-800 bg-[#0A0A0A] flex items-center gap-3 sticky bottom-0">
-                <button className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-medium transition-colors">
-                  Save for Later
-                </button>
                 <button 
                   onClick={() => handleApply(selectedBank.bank.id)}
                   disabled={hasApplied(selectedBank.bank.id)}
                   className="flex-1 py-2.5 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(59,130,246,0.2)] disabled:shadow-none">
                   {hasApplied(selectedBank.bank.id) ? "Application Submitted" : "Apply Now"}
                 </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+
+
+      {/* AI Chat Slide-over Panel */}
+      <AnimatePresence>
+        {isChatOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsChatOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-full sm:w-[400px] bg-[#0F0F0F] border-l border-zinc-800 z-50 shadow-2xl flex flex-col"
+            >
+              <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-[#121212]">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold text-zinc-100">AI Funding Advisor</h2>
+                    <p className="text-[10px] text-zinc-400">Powered by FundBridge</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsChatOpen(false)}
+                  className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-zinc-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={chatScrollRef}>
+                {chatMessages.length === 0 && (
+                  <div className="text-center text-zinc-500 text-xs mt-10">
+                    <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3 border border-zinc-700">
+                      <Zap className="w-5 h-5 text-zinc-400" />
+                    </div>
+                    <p>I'm your AI advisor. I have access to your full financial profile.</p>
+                    <p className="mt-1">Ask me anything about improving your funding readiness!</p>
+                  </div>
+                )}
+                
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] rounded-2xl p-3 text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-zinc-800 text-zinc-200 rounded-bl-none border border-zinc-700'}`}>
+                      <div className="prose prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-zinc-900 prose-sm">
+                        <ReactMarkdown>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {isChatLoading && (
+                  <div className="flex justify-start">
+                    <div className="max-w-[85%] rounded-2xl rounded-bl-none bg-zinc-800 border border-zinc-700 p-4">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 border-t border-zinc-800 bg-[#121212]">
+                <form onSubmit={handleChatSubmit} className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask about your funding readiness..."
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-full pl-4 pr-12 py-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-shadow placeholder:text-zinc-500"
+                    disabled={isChatLoading}
+                  />
+                  <button 
+                    type="submit"
+                    disabled={!chatInput.trim() || isChatLoading}
+                    className="absolute right-2 p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-full transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
               </div>
             </motion.div>
           </>

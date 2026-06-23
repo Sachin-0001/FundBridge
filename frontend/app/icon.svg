@@ -1,0 +1,34 @@
+<svg viewBox="0 0 512 512" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="emerald" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- App Icon Background -->
+  <rect width="512" height="512" rx="112" fill="#09090b" />
+
+  <g filter="url(#shadow)">
+    <!-- Left Arc (Emerald) -->
+    <path d="M 272 86 L 272 136 L 224 136 L 224 426 L 76 426 L 76 246 Q 76 86 272 86 Z" 
+          fill="url(#emerald)" 
+          stroke="url(#emerald)" 
+          stroke-width="16" 
+          stroke-linejoin="round" />
+
+    <!-- Right Arc (Blue) -->
+    <path d="M 296 136 L 296 86 Q 436 86 436 246 L 436 426 L 296 426 L 296 308 L 348 308 L 348 240 L 296 240 L 296 204 L 388 204 L 388 136 Z" 
+          fill="url(#blue)" 
+          stroke="url(#blue)" 
+          stroke-width="16" 
+          stroke-linejoin="round" />
+  </g>
+</svg>
