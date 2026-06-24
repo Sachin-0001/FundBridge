@@ -13,9 +13,9 @@ class BankService:
     async def register_bank(self, user_id: int, data: BankProfileCreate) -> BankProfileResponse:
         existing = await self.repo.get_by_user_id(user_id)
         if existing:
-            # Updates are not fully implemented here but we can trigger recompute
-            await self.matching_service.compute_matches_for_bank(existing.id)
-            return BankProfileResponse.model_validate(existing)
+            bank = await self.repo.update_bank(user_id, data)
+            await self.matching_service.compute_matches_for_bank(bank.id)
+            return BankProfileResponse.model_validate(bank)
 
         bank = await self.repo.create_bank(user_id=user_id, bank_data=data)
         await self.matching_service.compute_matches_for_bank(bank.id)

@@ -33,10 +33,32 @@ import {
   Settings,
   Loader2,
   Target,
-  Filter
+  Filter,
+  User,
+  Layers
 } from 'lucide-react';
 import { BankService } from "@/services/bank.service";
 import { useAuth } from "@/contexts/AuthContext";
+
+const institutionTypes = [
+  "Commercial Bank",
+  "NBFC",
+  "Credit Union",
+  "Venture Debt",
+  "FinTech Lender",
+  "Government Institution",
+  "Private Lending Firm"
+];
+
+const loanProductOptions = [
+  "Working Capital",
+  "Equipment Financing",
+  "Invoice Financing",
+  "Business Expansion",
+  "MSME Loan",
+  "Line of Credit",
+  "Term Loan"
+];
 
 export default function BankDashboard() {
   const [data, setData] = useState<any>(null);
@@ -45,7 +67,7 @@ export default function BankDashboard() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   
-  const [activeTab, setActiveTab] = useState<"matches" | "applications">("applications");
+  const [activeTab, setActiveTab] = useState<"matches" | "applications" | "edit_profile">("applications");
   const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   
@@ -56,6 +78,13 @@ export default function BankDashboard() {
   const [minScore, setMinScore] = useState<number | "">("");
   const [minAiScore, setMinAiScore] = useState<number | "">("");
   const [maxFunding, setMaxFunding] = useState<number | "">("");
+
+  const [editFormData, setEditFormData] = useState<any>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  
+  const [isCompareMode, setIsCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState<any[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   
   const loadData = () => {
     Promise.all([
@@ -80,6 +109,31 @@ export default function BankDashboard() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (data && !editFormData) {
+      setEditFormData(data);
+    }
+  }, [data]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    try {
+      await BankService.register({
+        ...editFormData,
+        requirements: {
+          ...editFormData.requirements
+        }
+      });
+      await loadData();
+      setActiveTab('applications');
+    } catch (err) {
+      console.error("Failed to save profile", err);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   const handleUpdateStatus = async (appId: number, status: string) => {
     // Optimistic UI update
@@ -155,20 +209,14 @@ export default function BankDashboard() {
         
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2 px-3 mt-2">Overview</div>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg bg-emerald-500/10 text-emerald-400">
+          <button onClick={() => setActiveTab('applications')} className={`w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab !== 'edit_profile' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-zinc-800/50 text-zinc-400'}`}>
             <LayoutDashboard className="h-4 w-4" /> Deal Flow
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
-            <Users className="h-4 w-4" /> Portfolio
-          </a>
+          </button>
           
           <div className="text-[11px] font-medium text-zinc-500 uppercase tracking-wider mb-2 mt-8 px-3">Configuration</div>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
-            <Target className="h-4 w-4" /> Rules Engine
-          </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg hover:bg-zinc-800/50 text-zinc-400 transition-colors">
-            <Settings className="h-4 w-4" /> Settings
-          </a>
+          <button onClick={() => setActiveTab('edit_profile')} className={`w-full text-left flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${activeTab === 'edit_profile' ? 'bg-emerald-500/10 text-emerald-400' : 'hover:bg-zinc-800/50 text-zinc-400'}`}>
+            <User className="h-4 w-4" /> Edit Profile
+          </button>
         </nav>
       </aside>
       
@@ -285,6 +333,32 @@ export default function BankDashboard() {
                       onChange={e => setMinAiScore(e.target.value ? Number(e.target.value) : "")}
                       className="h-9 w-32 bg-[#121212] border border-zinc-800 rounded-lg px-4 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all text-zinc-200 placeholder:text-zinc-600"
                     />
+                    
+                    {/* Compare Button */}
+                    <div className="flex gap-2 ml-auto">
+                      <button 
+                        onClick={() => {
+                          if (isCompareMode) {
+                            setIsCompareMode(false);
+                            setSelectedForCompare([]);
+                          } else {
+                            setIsCompareMode(true);
+                          }
+                        }}
+                        className={`h-9 px-4 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isCompareMode ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-[#121212] border border-zinc-800 text-zinc-300 hover:border-emerald-500'}`}
+                      >
+                        <Layers className="w-4 h-4" /> {isCompareMode ? "Cancel Compare" : "Compare"}
+                      </button>
+                      {isCompareMode && (
+                        <button
+                          disabled={selectedForCompare.length !== 2}
+                          onClick={() => setShowCompareModal(true)}
+                          className="h-9 px-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-zinc-800 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Compare Selected ({selectedForCompare.length}/2)
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -301,13 +375,33 @@ export default function BankDashboard() {
                     {filteredMatches.map((match) => (
                       <div 
                         key={match.id} 
-                        className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors flex flex-col group relative overflow-hidden"
+                        className={`p-5 bg-[#121212] border ${selectedForCompare.some(m => m.id === match.id) ? 'border-emerald-500/50 ring-1 ring-emerald-500/50' : 'border-zinc-800/80 hover:border-zinc-700'} rounded-xl transition-all flex flex-col group relative overflow-hidden`}
                       >
-                        <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => setSelectedMatch(match)} className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium hover:bg-emerald-500/20 transition-colors">
-                            View Details
-                          </button>
-                        </div>
+                        {isCompareMode && (
+                          <div className="absolute top-4 right-4 z-10">
+                            <input
+                              type="checkbox"
+                              checked={selectedForCompare.some(m => m.id === match.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  if (selectedForCompare.length < 2) {
+                                    setSelectedForCompare([...selectedForCompare, match]);
+                                  }
+                                } else {
+                                  setSelectedForCompare(selectedForCompare.filter(m => m.id !== match.id));
+                                }
+                              }}
+                              className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
+                            />
+                          </div>
+                        )}
+                        {!isCompareMode && (
+                          <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => setSelectedMatch(match)} className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-medium hover:bg-emerald-500/20 transition-colors">
+                              View Details
+                            </button>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
@@ -406,6 +500,131 @@ export default function BankDashboard() {
                     </div>
                   ))
                 )}
+              </div>
+            )}
+
+            {activeTab === 'edit_profile' && editFormData && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-medium text-zinc-100">Edit Profile</h3>
+                  <p className="text-zinc-400 text-sm mt-1">Update your institution details and lending preferences.</p>
+                </div>
+
+                <form onSubmit={handleSaveProfile} className="space-y-6">
+                  {/* Institution Details */}
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Institution Details</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Institution Name</label>
+                        <input type="text" value={editFormData.institution_name || ""} onChange={e => setEditFormData({...editFormData, institution_name: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Institution Type</label>
+                        <select value={editFormData.institution_type || ""} onChange={e => setEditFormData({...editFormData, institution_type: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 appearance-none">
+                          <option value="" disabled>Select Type...</option>
+                          {institutionTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">City</label>
+                        <input type="text" value={editFormData.city || ""} onChange={e => setEditFormData({...editFormData, city: e.target.value})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lending Products */}
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Lending Products</h2>
+                    <div className="mb-6">
+                      <label className="block text-xs font-medium text-zinc-400 mb-3">Loan Products Offered</label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {loanProductOptions.map((opt) => (
+                          <label key={opt} className="flex items-center space-x-3 p-3 rounded-lg border border-zinc-800/50 bg-zinc-900/50 cursor-pointer hover:bg-zinc-800 transition-colors">
+                            <input 
+                              type="checkbox" 
+                              checked={(editFormData.loan_products || []).includes(opt)}
+                              onChange={(e) => {
+                                const current = editFormData.loan_products || [];
+                                const next = e.target.checked 
+                                  ? [...current, opt]
+                                  : current.filter((p: string) => p !== opt);
+                                setEditFormData({...editFormData, loan_products: next});
+                              }}
+                              className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500" 
+                            />
+                            <span className="text-sm text-zinc-300 font-medium">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Interest Rate (%)</label>
+                        <input type="number" step="0.1" value={editFormData.min_interest_rate || ""} onChange={e => setEditFormData({...editFormData, min_interest_rate: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Interest Rate (%)</label>
+                        <input type="number" step="0.1" value={editFormData.max_interest_rate || ""} onChange={e => setEditFormData({...editFormData, max_interest_rate: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Loan Amount ($)</label>
+                        <input type="number" value={editFormData.min_loan_amount || ""} onChange={e => setEditFormData({...editFormData, min_loan_amount: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Loan Amount ($)</label>
+                        <input type="number" value={editFormData.max_loan_amount || ""} onChange={e => setEditFormData({...editFormData, max_loan_amount: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Loan Tenor (Months)</label>
+                        <input type="number" value={editFormData.min_loan_tenor || ""} onChange={e => setEditFormData({...editFormData, min_loan_tenor: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Loan Tenor (Months)</label>
+                        <input type="number" value={editFormData.max_loan_tenor || ""} onChange={e => setEditFormData({...editFormData, max_loan_tenor: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Requirements */}
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Eligibility Rules & Preferences</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Annual Revenue ($)</label>
+                        <input type="number" value={editFormData.requirements?.min_revenue || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, min_revenue: parseFloat(e.target.value)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Debt-to-Revenue Ratio (%)</label>
+                        <input type="number" step="0.1" value={editFormData.requirements?.max_debt_to_revenue_ratio || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, max_debt_to_revenue_ratio: parseFloat(e.target.value)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Years in Business</label>
+                        <input type="number" value={editFormData.requirements?.min_years_in_business || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, min_years_in_business: parseInt(e.target.value)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Preferred Industries (Comma separated)</label>
+                        <input type="text" value={editFormData.requirements?.preferred_industries?.join(", ") || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, preferred_industries: e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Preferred Locations (Comma separated)</label>
+                        <input type="text" value={editFormData.requirements?.preferred_locations?.join(", ") || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, preferred_locations: e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
+                      </div>
+                      <div className="md:col-span-2 flex items-center gap-2 mt-2">
+                        <input type="checkbox" checked={editFormData.requirements?.gst_registered_only || false} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, gst_registered_only: e.target.checked}})} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500" />
+                        <label className="block text-xs font-medium text-zinc-400">Accept GST/Tax Registered Businesses Only</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button type="submit" disabled={isSavingProfile} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                      {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Profile"}
+                    </button>
+                  </div>
+                </form>
               </div>
             )}
           </div>
@@ -686,6 +905,69 @@ export default function BankDashboard() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Compare Modal */}
+      {showCompareModal && selectedForCompare.length === 2 && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#121212] border border-zinc-800 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-zinc-800 flex justify-between items-center bg-[#0A0A0A]">
+              <h2 className="text-xl font-semibold text-zinc-100 flex items-center gap-2"><Layers className="w-5 h-5 text-emerald-500"/> Business Comparison</h2>
+              <button onClick={() => setShowCompareModal(false)} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 bg-[#0A0A0A]">
+              <div className="grid grid-cols-3 gap-6">
+                {/* Headers */}
+                <div className="space-y-4 p-4 text-sm font-medium text-zinc-500">
+                  <div className="mb-4 h-20"></div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Industry</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Location</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Match Fit</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">AI Readiness Score</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Annual Revenue</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Net Profit</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Existing Debt</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Monthly Cash Flow</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Years in Operation</div>
+                  <div className="h-10 border-b border-zinc-800/50 flex items-center">Employees</div>
+                </div>
+
+                {/* Businesses */}
+                {selectedForCompare.map((match, idx) => (
+                  <div key={match.id} className={`space-y-4 p-4 rounded-xl ${idx === 0 ? 'bg-blue-500/5 border border-blue-500/10' : 'bg-emerald-500/5 border border-emerald-500/10'}`}>
+                    <div className="mb-4 flex flex-col items-center text-center h-20 justify-center relative">
+                      <div className="h-12 w-12 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700 mb-2 shadow-sm">
+                        {match.business?.company_name.substring(0,2).toUpperCase()}
+                      </div>
+                      <h3 className="font-semibold text-zinc-100 text-sm truncate w-full px-2" title={match.business?.company_name}>{match.business?.company_name}</h3>
+                    </div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{match.business?.industry || 'N/A'}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{match.business?.city || 'N/A'}{match.business?.state ? `, ${match.business.state}` : ''}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm font-semibold text-emerald-400">{match.compatibility_score}%</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm font-medium text-blue-400">{match.business?.readiness_score || 'N/A'} <span className="text-zinc-600 ml-1 text-xs font-normal">/ 100</span></div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{formatCurrency(match.business?.annual_revenue)}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{formatCurrency(match.business?.annual_net_profit)}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-amber-500/80">{formatCurrency(match.business?.existing_debt)}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{formatCurrency(match.business?.monthly_cash_flow)}</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{match.business?.years_in_operation || 0} years</div>
+                    <div className="h-10 border-b border-zinc-800/50 flex items-center text-sm text-zinc-300">{match.business?.employee_count || 0}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="p-4 border-t border-zinc-800 bg-[#0F0F0F] flex justify-end gap-3">
+              <button onClick={() => {
+                setShowCompareModal(false);
+                setIsCompareMode(false);
+                setSelectedForCompare([]);
+              }} className="px-6 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors">
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

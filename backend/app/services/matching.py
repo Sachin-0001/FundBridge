@@ -32,36 +32,23 @@ class MatchingService:
             score += 25
             passed_rules.append("No minimum revenue requirement")
 
-        # AI Readiness Score: 20
-        # Check if readiness_score exists and min_readiness_score exists
-        b_readiness = business.readiness_score or 0
-        if reqs.min_readiness_score is not None:
-            if b_readiness >= reqs.min_readiness_score:
-                score += 20
-                passed_rules.append(f"AI Score meets minimum of {reqs.min_readiness_score}")
-            else:
-                failed_rules.append(f"AI Score {b_readiness} below minimum {reqs.min_readiness_score}")
-        else:
-            score += 20
-            passed_rules.append("No minimum AI score requirement")
-
-        # Debt Ratio: 20
+        # Debt Ratio: 30 (+10 points)
         # ratio = existing_debt / annual_revenue
         ratio = (business.existing_debt / business.annual_revenue) if business.annual_revenue and business.annual_revenue > 0 else 0
         if reqs.max_debt_to_revenue_ratio is not None:
             if ratio <= reqs.max_debt_to_revenue_ratio:
-                score += 20
+                score += 30
                 passed_rules.append(f"Debt-to-Revenue Ratio {ratio:.2f} within limit {reqs.max_debt_to_revenue_ratio}")
             else:
                 failed_rules.append(f"Debt-to-Revenue Ratio {ratio:.2f} exceeds limit {reqs.max_debt_to_revenue_ratio}")
         else:
-            score += 20
+            score += 30
             passed_rules.append("No maximum Debt-to-Revenue requirement")
 
-        # Years: 15
+        # Years: 25 (+10 points)
         if reqs.min_years_in_business is not None:
             if business.years_in_operation >= reqs.min_years_in_business:
-                score += 15
+                score += 25
                 passed_rules.append(f"Years in business meets minimum of {reqs.min_years_in_business}")
             else:
                 failed_rules.append(f"Years in business {business.years_in_operation} below minimum {reqs.min_years_in_business}")

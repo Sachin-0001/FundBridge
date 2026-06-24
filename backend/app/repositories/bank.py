@@ -33,6 +33,31 @@ class BankRepository:
         )
         return result.scalars().first()
 
+    async def update_bank(self, user_id: int, bank_data: BankProfileCreate) -> BankProfile:
+        existing = await self.get_by_user_id(user_id)
+        if not existing:
+            raise Exception("Bank profile not found")
+        
+        data_dict = bank_data.model_dump(exclude={"requirements"}, exclude_unset=True)
+        for key, value in data_dict.items():
+            setattr(existing, key, value)
+        
+        if bank_data.requirements:
+            req_data = bank_data.requirements.model_dump(exclude_unset=True)
+            if existing.requirements:
+                for key, value in req_data.items():
+                    setattr(existing.requirements, key, value)
+            else:
+                req_obj = BankRequirements(
+                    bank_id=existing.id,
+                    **req_data
+                )
+                self.session.add(req_obj)
+        
+        await self.session.commit()
+        await self.session.refresh(existing)
+        return existing
+
     async def get_by_user_id(self, user_id: int) -> BankProfile | None:
         result = await self.session.execute(
             select(BankProfile).options(selectinload(BankProfile.requirements)).where(BankProfile.user_id == user_id)
