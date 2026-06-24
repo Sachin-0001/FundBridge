@@ -67,7 +67,7 @@ export default function TermsPage() {
             <section id="bank-responsibilities" className="space-y-4">
               <h2 className="text-2xl font-semibold text-white tracking-tight">5. Bank Responsibilities</h2>
               <p className="leading-relaxed">
-                Financial institutions ("Banks") agree to review applications in good faith and handle all business data in compliance with applicable financial regulations and data privacy laws.
+                Financial institutions (&quot;Banks&quot;) agree to review applications in good faith and handle all business data in compliance with applicable financial regulations and data privacy laws.
               </p>
             </section>
 
@@ -88,7 +88,7 @@ export default function TermsPage() {
             <section id="suspension" className="space-y-4">
               <h2 className="text-2xl font-semibold text-white tracking-tight">8. Account Suspension</h2>
               <p className="leading-relaxed">
-                FundBridge AI reserves the right to suspend or terminate accounts that violate these terms, engage in fraudulent activities, or misuse the platform's features, without prior notice.
+                FundBridge AI reserves the right to suspend or terminate accounts that violate these terms, engage in fraudulent activities, or misuse the platform&apos;s features, without prior notice.
               </p>
             </section>
 
