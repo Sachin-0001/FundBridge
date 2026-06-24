@@ -31,7 +31,6 @@ class BankProfile(Base):
     # Step 1: Institution Details
     institution_name = Column(String, index=True, nullable=False)
     institution_type = Column(String, nullable=False, default=InstitutionType.COMMERCIAL_BANK.value)
-    country = Column(String)
     city = Column(String)
     
     # Step 2: Lending Products
@@ -40,6 +39,8 @@ class BankProfile(Base):
     max_interest_rate = Column(Float)
     min_loan_amount = Column(Float)
     max_loan_amount = Column(Float)
+    min_loan_tenor = Column(Integer)
+    max_loan_tenor = Column(Integer)
     
     # Old field (retaining for compatibility or migration ease)
     contact_email = Column(String, nullable=True)
@@ -62,7 +63,6 @@ class BankRequirements(Base):
     min_revenue = Column(Float)
     max_debt_to_revenue_ratio = Column(Float)
     min_years_in_business = Column(Integer)
-    min_readiness_score = Column(Integer)
     
     # Step 4: Lending Preferences
     preferred_industries = Column(JSON)  # List of strings

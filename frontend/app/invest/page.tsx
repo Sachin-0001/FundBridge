@@ -48,7 +48,6 @@ const formSchema = z.object({
   // Step 1
   institution_name: z.string().min(2, "Institution name is required"),
   institution_type: z.string().min(2, "Institution type is required"),
-  country: z.string().min(2, "Country is required"),
   city: z.string().min(2, "City is required"),
   
   // Step 2
@@ -57,12 +56,13 @@ const formSchema = z.object({
   max_interest_rate: z.coerce.number().min(0).max(100),
   min_loan_amount: z.coerce.number().min(0),
   max_loan_amount: z.coerce.number().min(0),
+  min_loan_tenor: z.coerce.number().min(0),
+  max_loan_tenor: z.coerce.number().min(0),
 
   // Step 3
   min_revenue: z.coerce.number().min(0),
   max_debt_to_revenue_ratio: z.coerce.number().min(0).max(100),
   min_years_in_business: z.coerce.number().min(0),
-  min_readiness_score: z.coerce.number().min(0).max(100),
 
   // Step 4
   preferred_industries: z.string().min(1, "Select at least one industry (can type 'All')"),
@@ -82,17 +82,17 @@ export default function InvestPage() {
     defaultValues: {
       institution_name: "",
       institution_type: institutionTypes[0],
-      country: "",
       city: "",
       loan_products: [],
       min_interest_rate: "" as any,
       max_interest_rate: "" as any,
       min_loan_amount: "" as any,
       max_loan_amount: "" as any,
+      min_loan_tenor: "" as any,
+      max_loan_tenor: "" as any,
       min_revenue: "" as any,
       max_debt_to_revenue_ratio: "" as any,
       min_years_in_business: "" as any,
-      min_readiness_score: "" as any,
       preferred_industries: "",
       preferred_locations: "",
       gst_registered_only: false,
@@ -120,9 +120,9 @@ export default function InvestPage() {
 
   const nextStep = async () => {
     let isValid = false;
-    if (currentStep === 0) isValid = await form.trigger(["institution_name", "institution_type", "country", "city"]);
-    else if (currentStep === 1) isValid = await form.trigger(["loan_products", "min_interest_rate", "max_interest_rate", "min_loan_amount", "max_loan_amount"]);
-    else if (currentStep === 2) isValid = await form.trigger(["min_revenue", "max_debt_to_revenue_ratio", "min_years_in_business", "min_readiness_score"]);
+    if (currentStep === 0) isValid = await form.trigger(["institution_name", "institution_type", "city"]);
+    else if (currentStep === 1) isValid = await form.trigger(["loan_products", "min_interest_rate", "max_interest_rate", "min_loan_amount", "max_loan_amount", "min_loan_tenor", "max_loan_tenor"]);
+    else if (currentStep === 2) isValid = await form.trigger(["min_revenue", "max_debt_to_revenue_ratio", "min_years_in_business"]);
     else isValid = await form.trigger(["preferred_industries", "preferred_locations", "gst_registered_only"]);
 
     if (isValid) {
@@ -141,18 +141,18 @@ export default function InvestPage() {
       await BankService.register({
         institution_name: data.institution_name,
         institution_type: data.institution_type,
-        country: data.country,
         city: data.city,
         loan_products: data.loan_products,
         min_interest_rate: data.min_interest_rate,
         max_interest_rate: data.max_interest_rate,
         min_loan_amount: data.min_loan_amount,
         max_loan_amount: data.max_loan_amount,
+        min_loan_tenor: data.min_loan_tenor,
+        max_loan_tenor: data.max_loan_tenor,
         requirements: {
           min_revenue: data.min_revenue,
           max_debt_to_revenue_ratio: data.max_debt_to_revenue_ratio,
           min_years_in_business: data.min_years_in_business,
-          min_readiness_score: data.min_readiness_score,
           preferred_industries: data.preferred_industries.split(",").map((s: string) => s.trim()).filter(Boolean),
           preferred_locations: data.preferred_locations.split(",").map((s: string) => s.trim()).filter(Boolean),
           gst_registered_only: data.gst_registered_only,
@@ -239,12 +239,7 @@ export default function InvestPage() {
                         </select>
                         {form.formState.errors.institution_type && <p className="text-sm text-destructive">{form.formState.errors.institution_type.message}</p>}
                       </div>
-                      <div className="space-y-2">
-                        <Label>Country</Label>
-                        <Input {...form.register("country")} placeholder="USA" className="h-12" />
-                        {form.formState.errors.country && <p className="text-sm text-destructive">{form.formState.errors.country.message}</p>}
-                      </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 md:col-span-2">
                         <Label>Headquarters City</Label>
                         <Input {...form.register("city")} placeholder="New York" className="h-12" />
                         {form.formState.errors.city && <p className="text-sm text-destructive">{form.formState.errors.city.message}</p>}
@@ -290,6 +285,14 @@ export default function InvestPage() {
                           <Label>Max Loan Amount ($)</Label>
                           <Input type="number" {...form.register("max_loan_amount")} placeholder="10000000" className="h-12" />
                         </div>
+                        <div className="space-y-2">
+                          <Label>Min Loan Tenor (Months)</Label>
+                          <Input type="number" {...form.register("min_loan_tenor")} placeholder="12" className="h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Max Loan Tenor (Months)</Label>
+                          <Input type="number" {...form.register("max_loan_tenor")} placeholder="120" className="h-12" />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -313,11 +316,6 @@ export default function InvestPage() {
                         <Label>Min Years in Business</Label>
                         <Input type="number" {...form.register("min_years_in_business")} placeholder="2" className="h-12" />
                         <p className="text-xs text-muted-foreground">Minimum operational history required.</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Min AI Readiness Score</Label>
-                        <Input type="number" {...form.register("min_readiness_score")} placeholder="70" className="h-12" />
-                        <p className="text-xs text-muted-foreground">FundBridge proprietary score (0-100).</p>
                       </div>
                     </div>
                   </div>

@@ -98,18 +98,18 @@ async def seed():
             "profile": BankProfileCreate(
                 institution_name="Global Finance Partners",
                 institution_type="Commercial Bank",
-                country="USA",
                 city="New York",
                 loan_products=["Term Loan", "Line of Credit", "Equipment Financing"],
                 min_interest_rate=5.5,
                 max_interest_rate=14.0,
                 min_loan_amount=100000.0,
                 max_loan_amount=5000000.0,
+                min_loan_tenor=12,
+                max_loan_tenor=120,
                 requirements=BankRequirementsBase(
                     min_revenue=1000000.0,
                     max_debt_to_revenue_ratio=0.4,
                     min_years_in_business=3,
-                    min_readiness_score=60,
                     preferred_industries=["Technology", "Manufacturing", "Healthcare"],
                     preferred_locations=["San Francisco", "New York", "Houston", "USA"],
                     gst_registered_only=True
