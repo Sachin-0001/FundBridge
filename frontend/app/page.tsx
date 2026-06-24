@@ -311,7 +311,7 @@ function BusinessLanding() {
           Join thousands of businesses getting matched with the right capital providers in days, not months.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Link href="/borrow" passHref>
+          <Link href="/register" passHref>
             <Button size="lg" className="cursor-pointer rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
