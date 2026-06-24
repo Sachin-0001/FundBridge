@@ -352,7 +352,7 @@ export default function BusinessDashboard() {
             {/* Top Row: Greeting */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               <h2 className="text-2xl font-semibold tracking-tight text-zinc-100">{getGreeting()}, {data?.company_name?.split(" ")[0] || "Founder"}</h2>
-              <p className="text-zinc-400 mt-1 text-sm">Here's your latest funding readiness overview and AI insights.</p>
+              <p className="text-zinc-400 mt-1 text-sm">Here&apos;s your latest funding readiness overview and AI insights.</p>
             </motion.div>
 
             {/* First Row: Top KPI Cards */}
@@ -719,7 +719,7 @@ export default function BusinessDashboard() {
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
-                      <p className="mb-4">Your AI Funding Report hasn't been generated yet.</p>
+                      <p className="mb-4">Your AI Funding Report hasn&apos;t been generated yet.</p>
                       <button onClick={handleGenerateReport} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                         <Zap className="w-4 h-4" /> Generate AI Report
                       </button>
@@ -999,7 +999,7 @@ export default function BusinessDashboard() {
                     <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center mx-auto mb-3 border border-zinc-700">
                       <Zap className="w-5 h-5 text-zinc-400" />
                     </div>
-                    <p>I'm your AI advisor. I have access to your full financial profile.</p>
+                    <p>I&apos;m your AI advisor. I have access to your full financial profile.</p>
                     <p className="mt-1">Ask me anything about improving your funding readiness!</p>
                   </div>
                 )}

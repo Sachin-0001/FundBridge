@@ -300,7 +300,7 @@ export default function InvestPage() {
                 {currentStep === 2 && (
                   <div className="space-y-6">
                     <h2 className="text-2xl font-semibold">Eligibility Rules</h2>
-                    <p className="text-sm text-muted-foreground">These rules automatically filter out businesses that don't match your criteria.</p>
+                    <p className="text-sm text-muted-foreground">These rules automatically filter out businesses that don&apos;t match your criteria.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Min Annual Revenue ($)</Label>
