@@ -42,7 +42,8 @@ export const BankService = {
 
   async downloadBusinessDocument(businessId: number, documentId: number, fileName: string) {
     const token = localStorage.getItem('token');
-    const response = await fetch(`http://localhost:8000/api/v1/bank/business/${businessId}/documents/${documentId}/download`, {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+    const response = await fetch(`${baseUrl}/bank/business/${businessId}/documents/${documentId}/download`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

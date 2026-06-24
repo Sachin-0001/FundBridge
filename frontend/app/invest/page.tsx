@@ -305,11 +305,11 @@ export default function InvestPage() {
                           <Input type="number" step="0.1" {...form.register("max_interest_rate")} placeholder="15.0" className="h-12" />
                         </div>
                         <div className="space-y-2">
-                          <Label>Min Loan Amount ($)</Label>
+                          <Label>Min Loan Amount (₹)</Label>
                           <Input type="number" {...form.register("min_loan_amount")} placeholder="10000" className="h-12" />
                         </div>
                         <div className="space-y-2">
-                          <Label>Max Loan Amount ($)</Label>
+                          <Label>Max Loan Amount (₹)</Label>
                           <Input type="number" {...form.register("max_loan_amount")} placeholder="10000000" className="h-12" />
                         </div>
                         <div className="space-y-2">
@@ -330,7 +330,7 @@ export default function InvestPage() {
                     <p className="text-sm text-muted-foreground">These rules automatically filter out businesses that don&apos;t match your criteria.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Min Annual Revenue ($)</Label>
+                        <Label>Min Annual Revenue (₹)</Label>
                         <Input type="number" {...form.register("min_revenue")} placeholder="500000" className="h-12" />
                         <p className="text-xs text-muted-foreground">Only businesses with revenue above this amount will match.</p>
                       </div>

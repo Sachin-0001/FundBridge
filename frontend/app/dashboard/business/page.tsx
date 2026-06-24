@@ -22,8 +22,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from 'react-markdown';
 
 const formatCurrency = (val: number | undefined) => {
-  if (val === undefined || val === null) return "$0";
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  if (val === undefined || val === null) return "₹0";
+  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);
 };
 
 // Reusable Components
@@ -895,19 +895,19 @@ export default function BusinessDashboard() {
                     <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Financial Overview</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Revenue ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Revenue (₹)</label>
                         <input type="number" value={editFormData.annual_revenue || 0} onChange={e => setEditFormData({...editFormData, annual_revenue: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Net Profit ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Annual Net Profit (₹)</label>
                         <input type="number" value={editFormData.annual_net_profit || 0} onChange={e => setEditFormData({...editFormData, annual_net_profit: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Existing Debt ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Existing Debt (₹)</label>
                         <input type="number" value={editFormData.existing_debt || 0} onChange={e => setEditFormData({...editFormData, existing_debt: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Monthly Cash Flow ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Monthly Cash Flow (₹)</label>
                         <input type="number" value={editFormData.monthly_cash_flow || 0} onChange={e => setEditFormData({...editFormData, monthly_cash_flow: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
@@ -921,7 +921,7 @@ export default function BusinessDashboard() {
                     <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Funding Needs</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Funding Goal ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Funding Goal (₹)</label>
                         <input type="number" value={editFormData.funding_goal || 0} onChange={e => setEditFormData({...editFormData, funding_goal: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>

@@ -164,10 +164,10 @@ export default function BankDashboard() {
   };
 
   const formatCurrency = (val: number | undefined) => {
-    if (val === undefined || val === null) return "$0";
-    if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
-    if (val >= 1000) return `$${(val / 1000).toFixed(0)}k`;
-    return `$${val}`;
+    if (val === undefined || val === null) return "₹0";
+    if (val >= 1000000) return `₹${(val / 1000000).toFixed(1)}M`;
+    if (val >= 1000) return `₹${(val / 1000).toFixed(0)}k`;
+    return `₹${val}`;
   };
 
   const filteredMatches = useMemo(() => {
@@ -609,11 +609,11 @@ export default function BankDashboard() {
                         <input type="number" step="0.1" value={editFormData.max_interest_rate || ""} onChange={e => setEditFormData({...editFormData, max_interest_rate: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Loan Amount ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Loan Amount (₹)</label>
                         <input type="number" value={editFormData.min_loan_amount || ""} onChange={e => setEditFormData({...editFormData, min_loan_amount: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Loan Amount ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Loan Amount (₹)</label>
                         <input type="number" value={editFormData.max_loan_amount || ""} onChange={e => setEditFormData({...editFormData, max_loan_amount: parseFloat(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                       </div>
                       <div>
@@ -632,7 +632,7 @@ export default function BankDashboard() {
                     <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Eligibility Rules & Preferences</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Annual Revenue ($)</label>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Annual Revenue (₹)</label>
                         <input type="number" value={editFormData.requirements?.min_revenue || ""} onChange={e => setEditFormData({...editFormData, requirements: {...editFormData.requirements, min_revenue: parseFloat(e.target.value)}})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" />
                       </div>
                       <div>

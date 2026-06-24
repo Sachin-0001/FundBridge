@@ -30,7 +30,7 @@ const formSchema = z.object({
   years_in_operation: z.coerce.number().min(0, "Required"),
   
   // Step 2
-  funding_goal: z.coerce.number().min(1000, "Minimum $1,000"),
+  funding_goal: z.coerce.number().min(1000, "Minimum ₹1,000"),
   funding_purpose: z.nativeEnum(FundingPurpose, { message: "Required" }),
   loan_type: z.nativeEnum(LoanType, { message: "Required" }),
   preferred_tenure_min: z.coerce.number().optional(),
@@ -224,7 +224,7 @@ export default function BorrowPage() {
                     <h2 className="text-2xl font-semibold">Funding Requirements</h2>
                     <div className="grid grid-cols-1 gap-4">
                       <div className="space-y-2">
-                        <Label>Funding Amount Required ($)</Label>
+                        <Label>Funding Amount Required (₹)</Label>
                         <Input type="number" {...form.register("funding_goal")} placeholder="100000" className="h-12" />
                         {form.formState.errors.funding_goal && <p className="text-sm text-destructive">{form.formState.errors.funding_goal.message}</p>}
                       </div>
@@ -263,21 +263,21 @@ export default function BorrowPage() {
                     <p className="text-sm text-muted-foreground">Please provide approximate figures for the last financial year.</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label>Annual Revenue ($)</Label>
+                        <Label>Annual Revenue (₹)</Label>
                         <Input type="number" {...form.register("annual_revenue")} placeholder="500000" className="h-12" />
                         {form.formState.errors.annual_revenue && <p className="text-sm text-destructive">{form.formState.errors.annual_revenue.message}</p>}
                       </div>
                       <div className="space-y-2">
-                        <Label>Annual Net Profit ($)</Label>
+                        <Label>Annual Net Profit (₹)</Label>
                         <Input type="number" {...form.register("annual_net_profit")} placeholder="75000" className="h-12" />
                       </div>
                       <div className="space-y-2">
-                        <Label>Existing Debt ($)</Label>
+                        <Label>Existing Debt (₹)</Label>
                         <Input type="number" {...form.register("existing_debt")} placeholder="10000" className="h-12" />
                         <p className="text-xs text-muted-foreground">Total outstanding loans or obligations.</p>
                       </div>
                       <div className="space-y-2">
-                        <Label>Average Monthly Cash Flow ($)</Label>
+                        <Label>Average Monthly Cash Flow (₹)</Label>
                         <Input type="number" {...form.register("monthly_cash_flow")} placeholder="20000" className="h-12" />
                       </div>
                       <div className="space-y-2 md:col-span-2">
