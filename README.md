@@ -49,7 +49,11 @@ FundBridge AI is a marketplace connecting businesses seeking loans with banks lo
    pip install -r requirements.txt
    ```
 4. **Set up the environment variables:**
-   Create a `.env` file in the `backend` directory with your `DATABASE_URL` (PostgreSQL), `SECRET_KEY`, and `GROQ_API_KEY`.
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Then, update `.env` with your `DATABASE_URL` (PostgreSQL), `SECRET_KEY`, and `GROQ_API_KEY`.
 5. **Run the database migrations:**
    ```bash
    alembic upgrade head
@@ -70,10 +74,11 @@ FundBridge AI is a marketplace connecting businesses seeking loans with banks lo
    npm install
    ```
 3. **Set up the environment variables:**
-   Create a `.env.local` file in the `frontend` directory with your API URL, typically:
-   ```env
-   NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env.local
    ```
+   Then, update `.env.local` if your API URL is different from the default (`http://localhost:8000/api/v1`).
 4. **Start the development server:**
    ```bash
    npm run dev

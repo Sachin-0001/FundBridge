@@ -66,17 +66,26 @@ async def read_user_me(
     current_user: User = Depends(deps.get_current_active_user),
     db: AsyncSession = Depends(deps.get_db)
 ) -> Any:
+    from sqlalchemy.orm import selectinload
     profile_data = None
     if current_user.role == "BUSINESS":
         from app.schemas.business import BusinessProfileResponse
-        result = await db.execute(select(BusinessProfile).where(BusinessProfile.user_id == current_user.id))
+        result = await db.execute(
+            select(BusinessProfile)
+            .options(selectinload(BusinessProfile.documents))
+            .where(BusinessProfile.user_id == current_user.id)
+        )
         profile = result.scalars().first()
         if profile:
             profile_data = BusinessProfileResponse.model_validate(profile).model_dump(mode="json")
     elif current_user.role == "BANK":
         from app.schemas.bank import BankProfileResponse
-        from sqlalchemy.orm import selectinload
-        result = await db.execute(select(BankProfile).options(selectinload(BankProfile.requirements)).where(BankProfile.user_id == current_user.id))
+        result = await db.execute(
+            select(BankProfile)
+            .options(selectinload(BankProfile.requirements))
+            .options(selectinload(BankProfile.document_requirements))
+            .where(BankProfile.user_id == current_user.id)
+        )
         profile = result.scalars().first()
         if profile:
             profile_data = BankProfileResponse.model_validate(profile).model_dump(mode="json")

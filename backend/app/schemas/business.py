@@ -1,7 +1,8 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from datetime import datetime
+from app.schemas.application import DocumentResponse
 
 class BusinessType(str, Enum):
     PROPRIETORSHIP = "Proprietorship"
@@ -89,6 +90,7 @@ class BusinessProfileResponse(BusinessProfileBase):
     ai_report: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
+    documents: Optional[List[DocumentResponse]] = []
 
     class Config:
         from_attributes = True

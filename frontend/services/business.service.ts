@@ -88,5 +88,58 @@ export const BusinessService = {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;
+  },
+
+  uploadDocument: async (documentType: string, file: File): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('document_type', documentType);
+    formData.append('file', file);
+    const response = await api.post('/business/documents', formData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  replaceDocument: async (documentId: number, file: File): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.put(`/business/documents/${documentId}`, formData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  deleteDocument: async (documentId: number): Promise<any> => {
+    const token = localStorage.getItem('token');
+    const response = await api.delete(`/business/documents/${documentId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  downloadDocument: async (documentId: number, fileName: string): Promise<void> => {
+    const token = localStorage.getItem('token');
+    const response = await api.get(`/business/documents/${documentId}/download`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'blob'
+    });
+    
+    // Create a blob URL and download
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 };

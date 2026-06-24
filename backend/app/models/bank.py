@@ -50,6 +50,7 @@ class BankProfile(Base):
 
     user = relationship("User", backref="bank_profile")
     requirements = relationship("BankRequirements", back_populates="bank", uselist=False, cascade="all, delete-orphan")
+    document_requirements = relationship("DocumentRequirement", back_populates="bank", cascade="all, delete-orphan")
     matches = relationship("Match", back_populates="bank")
     applications = relationship("Application", back_populates="bank")
 

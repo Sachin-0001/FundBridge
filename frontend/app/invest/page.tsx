@@ -22,6 +22,7 @@ const steps = [
   { id: "products", title: "Lending Products" },
   { id: "rules", title: "Eligibility Rules" },
   { id: "preferences", title: "Lending Preferences" },
+  { id: "documents", title: "Document Requirements" },
 ];
 
 const institutionTypes = [
@@ -42,6 +43,13 @@ const loanProductOptions = [
   "MSME Loan",
   "Line of Credit",
   "Term Loan"
+];
+
+const documentOptions = [
+  { id: "GST Certificate", label: "GST Certificate" },
+  { id: "PAN Card", label: "PAN Card" },
+  { id: "Income Tax Return", label: "Income Tax Return" },
+  { id: "Bank Statement", label: "Bank Statement" }
 ];
 
 const formSchema = z.object({
@@ -68,6 +76,9 @@ const formSchema = z.object({
   preferred_industries: z.string().min(1, "Select at least one industry (can type 'All')"),
   preferred_locations: z.string().min(1, "Select at least one location (can type 'All')"),
   gst_registered_only: z.boolean(),
+  
+  // Step 5
+  document_requirements: z.array(z.string()),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -96,6 +107,7 @@ export default function InvestPage() {
       preferred_industries: "",
       preferred_locations: "",
       gst_registered_only: false,
+      document_requirements: [],
     },
     mode: "onChange"
   });
@@ -106,6 +118,20 @@ export default function InvestPage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        
+        // Handle migration of legacy enum values
+        if (parsed.document_requirements && Array.isArray(parsed.document_requirements)) {
+          const legacyMap: Record<string, string> = {
+            "GST_CERTIFICATE": "GST Certificate",
+            "PAN_CARD": "PAN Card",
+            "INCOME_TAX_RETURN": "Income Tax Return",
+            "BANK_STATEMENT": "Bank Statement"
+          };
+          parsed.document_requirements = parsed.document_requirements.map((doc: string) => 
+            legacyMap[doc] || doc
+          );
+        }
+
         form.reset(parsed);
       } catch (e) {}
     }
@@ -156,7 +182,8 @@ export default function InvestPage() {
           preferred_industries: data.preferred_industries.split(",").map((s: string) => s.trim()).filter(Boolean),
           preferred_locations: data.preferred_locations.split(",").map((s: string) => s.trim()).filter(Boolean),
           gst_registered_only: data.gst_registered_only,
-        }
+        },
+        document_requirements: data.document_requirements,
       });
       localStorage.removeItem("bank_form_autosave");
       router.push("/dashboard/bank");
@@ -340,6 +367,41 @@ export default function InvestPage() {
                           <span className="text-sm font-medium">Accept GST/Tax Registered Businesses Only</span>
                         </label>
                       </div>
+                    </div>
+                  </div>
+                )}
+                {currentStep === 4 && (
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-semibold">Document Requirements</h2>
+                    <p className="text-sm text-muted-foreground">Select the documents you require from businesses before approving their loan application.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                      {documentOptions.map((option) => (
+                        <Controller
+                          key={option.id}
+                          name="document_requirements"
+                          control={form.control}
+                          render={({ field }) => (
+                            <div
+                              onClick={() => {
+                                const current = new Set(field.value || []);
+                                if (current.has(option.id)) {
+                                  current.delete(option.id);
+                                } else {
+                                  current.add(option.id);
+                                }
+                                field.onChange(Array.from(current));
+                              }}
+                              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                (field.value || []).includes(option.id)
+                                  ? "border-emerald-500 bg-emerald-500/5"
+                                  : "border-border/50 hover:border-emerald-500/30"
+                              }`}
+                            >
+                              <div className="font-medium">{option.label}</div>
+                            </div>
+                          )}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from app.models.application import DocumentType
 
 class BankRequirementsBase(BaseModel):
     min_revenue: Optional[float] = None
@@ -25,8 +26,22 @@ class BankProfileBase(BaseModel):
 
 class BankProfileCreate(BankProfileBase):
     requirements: Optional[BankRequirementsBase] = None
+    document_requirements: Optional[List[DocumentType]] = None
 
 class BankRequirementsResponse(BankRequirementsBase):
+    id: int
+    bank_id: int
+
+    class Config:
+        from_attributes = True
+
+
+
+class DocumentRequirementBase(BaseModel):
+    document_type: DocumentType
+    required: bool
+
+class DocumentRequirementResponse(DocumentRequirementBase):
     id: int
     bank_id: int
 
@@ -39,6 +54,7 @@ class BankProfileResponse(BankProfileBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     requirements: Optional[BankRequirementsResponse] = None
+    document_requirements: Optional[List[DocumentRequirementResponse]] = []
 
     class Config:
         from_attributes = True

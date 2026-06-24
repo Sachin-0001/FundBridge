@@ -52,3 +52,32 @@ async def get_matches(
     matches_data = [MatchResponse.model_validate(m).model_dump() for m in matches]
     return {"success": True, "message": "Matches retrieved successfully", "data": matches_data}
 
+from fastapi import Response
+from sqlalchemy.future import select
+from app.models.application import Document
+
+@router.get("/business/{business_id}/documents/{document_id}/download", response_class=Response)
+async def download_business_document(
+    business_id: int,
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BankService(db)
+    bank = await service.get_dashboard(current_user.id)
+    if not bank:
+        raise HTTPException(status_code=404, detail="Bank profile not found")
+        
+    result = await db.execute(select(Document).where(
+        Document.id == document_id,
+        Document.business_id == business_id
+    ))
+    doc = result.scalars().first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return Response(
+        content=doc.file_data,
+        media_type=doc.mime_type,
+        headers={"Content-Disposition": f"attachment; filename={doc.file_name}"}
+    )

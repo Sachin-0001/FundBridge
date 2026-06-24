@@ -341,7 +341,7 @@ function BankLanding() {
             Expand your loan portfolio with pre-vetted, high-quality businesses that match your exact lending criteria using our AI matching engine.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Link href="/invest" passHref>
+            <Link href="/register" passHref>
               <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
                 Register Bank <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -507,7 +507,7 @@ function BankLanding() {
           Join the network of premium lenders leveraging our AI matching engine to deploy capital efficiently.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Link href="/invest" passHref>
+          <Link href="/register" passHref>
             <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

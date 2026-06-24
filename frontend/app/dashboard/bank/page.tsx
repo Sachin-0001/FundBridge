@@ -60,6 +60,13 @@ const loanProductOptions = [
   "Term Loan"
 ];
 
+const documentOptions = [
+  "GST Certificate",
+  "PAN Card",
+  "Income Tax Return",
+  "Bank Statement"
+];
+
 export default function BankDashboard() {
   const [data, setData] = useState<any>(null);
   const [matches, setMatches] = useState<any[]>([]);
@@ -112,7 +119,10 @@ export default function BankDashboard() {
 
   useEffect(() => {
     if (data && !editFormData) {
-      setEditFormData(data);
+      setEditFormData({
+        ...data,
+        document_requirements: data.document_requirements?.map((dr: any) => typeof dr === 'string' ? dr : dr.document_type) || []
+      });
     }
   }, [data]);
 
@@ -124,7 +134,8 @@ export default function BankDashboard() {
         ...editFormData,
         requirements: {
           ...editFormData.requirements
-        }
+        },
+        document_requirements: editFormData.document_requirements?.map((dr: any) => typeof dr === 'string' ? dr : dr.document_type)
       });
       await loadData();
       setActiveTab('applications');
@@ -619,6 +630,30 @@ export default function BankDashboard() {
                     </div>
                   </div>
 
+                  {/* Document Requirements */}
+                  <div className="bg-[#121212] border border-zinc-800 rounded-xl p-6 space-y-4">
+                    <h2 className="text-sm font-semibold text-zinc-200 border-b border-zinc-800/50 pb-2 mb-4">Required Documents</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {documentOptions.map((opt) => (
+                        <label key={opt} className="flex items-center space-x-3 p-3 rounded-lg border border-zinc-800/50 bg-zinc-900/50 cursor-pointer hover:bg-zinc-800 transition-colors">
+                          <input 
+                            type="checkbox" 
+                            checked={(editFormData.document_requirements || []).includes(opt)}
+                            onChange={(e) => {
+                              const current = editFormData.document_requirements || [];
+                              const next = e.target.checked 
+                                ? [...current, opt]
+                                : current.filter((p: string) => p !== opt);
+                              setEditFormData({...editFormData, document_requirements: next});
+                            }}
+                            className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500" 
+                          />
+                          <span className="text-sm text-zinc-300 font-medium">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="flex justify-end">
                     <button type="submit" disabled={isSavingProfile} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                       {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Profile"}
@@ -760,6 +795,30 @@ export default function BankDashboard() {
                       <p className="text-[10px] text-zinc-500">{selectedMatch.business?.loan_type}</p>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-zinc-300 border-b border-zinc-800 pb-2">Uploaded Documents</h3>
+                  {selectedMatch.business?.documents && selectedMatch.business.documents.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedMatch.business.documents.map((doc: any) => (
+                        <div key={doc.id} className="p-3 bg-[#121212] rounded-lg border border-zinc-800/80 flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-emerald-400" />
+                            <span className="text-sm font-medium text-zinc-200">{doc.document_type}</span>
+                          </div>
+                          <button 
+                            onClick={() => BankService.downloadBusinessDocument(selectedMatch.business.id, doc.id, doc.file_name)}
+                            className="w-full py-1.5 mt-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-xs font-medium transition-colors text-center block"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-zinc-500 italic">No documents uploaded yet.</p>
+                  )}
                 </div>
 
               </div>

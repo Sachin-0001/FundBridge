@@ -183,4 +183,175 @@ async def chat_with_ai(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+from fastapi import UploadFile, File, Form, Response
+from app.models.application import Document, DocumentType, DocumentStatus
+from sqlalchemy.future import select
+
+@router.post("/documents", response_model=dict)
+async def upload_document(
+    document_type: DocumentType = Form(...),
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+
+    # Check if document type already exists
+    result = await db.execute(select(Document).where(
+        Document.business_id == business.id,
+        Document.document_type == document_type
+    ))
+    existing_doc = result.scalars().first()
+    if existing_doc:
+        raise HTTPException(status_code=400, detail=f"Document of type {document_type.value} already exists. Use replace instead.")
+
+    # Read file content
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    # Validate file size (max 50MB)
+    MAX_FILE_SIZE = 50 * 1024 * 1024
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File size exceeds maximum allowed size of 50MB")
+    
+    mime_type = file.content_type or "application/octet-stream"
+    
+    new_doc = Document(
+        business_id=business.id,
+        document_type=document_type,
+        file_name=file.filename or f"document_{document_type.value}",
+        mime_type=mime_type,
+        file_size=file_size,
+        file_data=file_content,
+        status=DocumentStatus.UPLOADED
+    )
+    db.add(new_doc)
+    await db.commit()
+    await db.refresh(new_doc)
+    
+    from app.services.matching import MatchingService
+    match_service = MatchingService(db)
+    await match_service.compute_matches_for_business(business.id)
+    
+    return {"success": True, "message": "Document uploaded successfully", "document_id": new_doc.id}
+
+@router.get("/documents", response_model=dict)
+async def get_documents(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+        
+    result = await db.execute(select(Document).where(Document.business_id == business.id))
+    documents = result.scalars().all()
+    
+    from app.schemas.application import DocumentResponse
+    docs_data = [DocumentResponse.model_validate(doc).model_dump(exclude={"file_data"}) for doc in documents]
+    
+    return {"success": True, "documents": docs_data}
+
+@router.get("/documents/{document_id}/download", response_class=Response)
+async def download_document(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+        
+    result = await db.execute(select(Document).where(
+        Document.id == document_id,
+        Document.business_id == business.id
+    ))
+    doc = result.scalars().first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    return Response(
+        content=doc.file_data,
+        media_type=doc.mime_type,
+        headers={"Content-Disposition": f"attachment; filename={doc.file_name}"}
+    )
+
+@router.put("/documents/{document_id}", response_model=dict)
+async def replace_document(
+    document_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+        
+    result = await db.execute(select(Document).where(
+        Document.id == document_id,
+        Document.business_id == business.id
+    ))
+    doc = result.scalars().first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    # Read file content
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    # Validate file size (max 50MB)
+    MAX_FILE_SIZE = 50 * 1024 * 1024
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(status_code=413, detail="File size exceeds maximum allowed size of 50MB")
+    
+    mime_type = file.content_type or "application/octet-stream"
+    
+    doc.file_name = file.filename or f"document_{doc.document_type.value}"
+    doc.mime_type = mime_type
+    doc.file_size = file_size
+    doc.file_data = file_content
+    doc.status = DocumentStatus.UPLOADED  # Reset status upon replace
+    
+    await db.commit()
+    
+    from app.services.matching import MatchingService
+    match_service = MatchingService(db)
+    await match_service.compute_matches_for_business(business.id)
+
+    return {"success": True, "message": "Document replaced successfully"}
+
+@router.delete("/documents/{document_id}", response_model=dict)
+async def delete_document(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+):
+    service = BusinessService(db)
+    business = await service.get_dashboard(current_user.id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business profile not found")
+        
+    result = await db.execute(select(Document).where(
+        Document.id == document_id,
+        Document.business_id == business.id
+    ))
+    doc = result.scalars().first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+        
+    await db.delete(doc)
+    await db.commit()
+    
+    from app.services.matching import MatchingService
+    match_service = MatchingService(db)
+    await match_service.compute_matches_for_business(business.id)
+    
+    return {"success": True, "message": "Document deleted successfully"}
+
 

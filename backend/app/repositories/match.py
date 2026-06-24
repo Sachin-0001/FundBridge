@@ -41,20 +41,24 @@ class MatchRepository:
 
     async def get_by_business_id(self, business_id: int) -> List[Match]:
         from app.models.bank import BankProfile
+        from app.models.business import BusinessProfile
         result = await self.session.execute(
             select(Match).options(
-                selectinload(Match.business),
-                selectinload(Match.bank).selectinload(BankProfile.requirements)
+                selectinload(Match.business).selectinload(BusinessProfile.documents),
+                selectinload(Match.bank).selectinload(BankProfile.requirements),
+                selectinload(Match.bank).selectinload(BankProfile.document_requirements)
             ).where(Match.business_id == business_id).order_by(Match.compatibility_score.desc())
         )
         return list(result.scalars().all())
 
     async def get_by_bank_id(self, bank_id: int) -> List[Match]:
         from app.models.bank import BankProfile
+        from app.models.business import BusinessProfile
         result = await self.session.execute(
             select(Match).options(
-                selectinload(Match.business),
-                selectinload(Match.bank).selectinload(BankProfile.requirements)
+                selectinload(Match.business).selectinload(BusinessProfile.documents),
+                selectinload(Match.bank).selectinload(BankProfile.requirements),
+                selectinload(Match.bank).selectinload(BankProfile.document_requirements)
             ).where(Match.bank_id == bank_id).order_by(Match.compatibility_score.desc())
         )
         return list(result.scalars().all())

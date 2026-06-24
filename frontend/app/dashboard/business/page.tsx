@@ -97,6 +97,7 @@ export default function BusinessDashboard() {
 
   const [editFormData, setEditFormData] = useState<any>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [uploadingDocs, setUploadingDocs] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (chatScrollRef.current) {
@@ -227,6 +228,39 @@ export default function BusinessDashboard() {
     return applications.some((app: any) => app.bank_id === bankId && app.status !== 'rejected' && app.status !== 'withdrawn' && app.status !== 'approved');
   };
 
+  const handleDocumentUpload = async (documentType: string, file: File) => {
+    setUploadingDocs(prev => ({ ...prev, [documentType]: true }));
+    try {
+      await BusinessService.uploadDocument(documentType, file);
+      await queryClient.invalidateQueries({ queryKey: ['businessDashboard'] });
+    } catch (e) {
+      console.error("Failed to upload document", e);
+    } finally {
+      setUploadingDocs(prev => ({ ...prev, [documentType]: false }));
+    }
+  };
+
+  const handleDocumentReplace = async (documentId: number, documentType: string, file: File) => {
+    setUploadingDocs(prev => ({ ...prev, [documentType]: true }));
+    try {
+      await BusinessService.replaceDocument(documentId, file);
+      await queryClient.invalidateQueries({ queryKey: ['businessDashboard'] });
+    } catch (e) {
+      console.error("Failed to replace document", e);
+    } finally {
+      setUploadingDocs(prev => ({ ...prev, [documentType]: false }));
+    }
+  };
+
+  const handleDocumentDelete = async (documentId: number) => {
+    try {
+      await BusinessService.deleteDocument(documentId);
+      await queryClient.invalidateQueries({ queryKey: ['businessDashboard'] });
+    } catch (e) {
+      console.error("Failed to delete document", e);
+    }
+  };
+
   useEffect(() => {
     setAiReport(data?.ai_report || "");
   }, [data?.id, data?.ai_report]);
@@ -313,6 +347,9 @@ export default function BusinessDashboard() {
               </button>
               <button onClick={() => setActiveTab('applications')} className={`flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left ${activeTab === 'applications' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
                 <FileText className="w-4 h-4" /> Applications
+              </button>
+              <button onClick={() => setActiveTab('documents')} className={`flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left ${activeTab === 'documents' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
+                <UploadCloud className="w-4 h-4" /> Document Center
               </button>
               <button onClick={() => setActiveTab('matches')} className={`flex items-center gap-3 w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors text-left flex justify-between ${activeTab === 'matches' ? 'bg-blue-500/10 text-blue-400' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100'}`}>
                 <div className="flex items-center gap-3">
@@ -688,6 +725,101 @@ export default function BusinessDashboard() {
               </div>
               )}
             </div>
+
+            {/* Document Center */}
+            {activeTab === 'documents' && (
+            <div className="space-y-4 pt-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium text-zinc-100">Document Center</h3>
+                <div className="flex items-center gap-3 bg-[#121212] px-4 py-2 rounded-lg border border-zinc-800">
+                  <span className="text-sm font-medium text-zinc-400">Completion</span>
+                  <div className="w-32 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-blue-500 rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min(100, ((data?.documents?.length || 0) / 4) * 100)}%` }} 
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-blue-400">{Math.min(100, Math.round(((data?.documents?.length || 0) / 4) * 100))}%</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['GST Certificate', 'PAN Card', 'Income Tax Return', 'Bank Statement'].map((docType) => {
+                  const doc = data?.documents?.find((d: any) => d.document_type === docType);
+                  const title = docType;
+                  
+                  return (
+                    <Card key={docType} className="p-5 flex flex-col group relative">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-blue-400 font-bold shadow-inner">
+                            <FileText className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-zinc-100 group-hover:text-blue-400 transition-colors">{title}</h4>
+                            <p className="text-[11px] text-zinc-500">Required Document</p>
+                          </div>
+                        </div>
+                        {doc && (
+                          <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide
+                            ${doc.status === 'UPLOADED' ? 'bg-amber-500/10 text-amber-500' :
+                              doc.status === 'VERIFIED' ? 'bg-blue-500/10 text-blue-500' :
+                              doc.status === 'REJECTED' ? 'bg-red-500/10 text-red-500' :
+                              'bg-zinc-500/10 text-zinc-400'
+                            }
+                          `}>
+                            {doc.status}
+                          </span>
+                        )}
+                        {!doc && (
+                          <span className="px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide bg-zinc-800/50 text-zinc-500">
+                            MISSING
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-auto flex gap-3 pt-4 border-t border-zinc-800/50">
+                        {uploadingDocs[docType] ? (
+                          <div className="w-full py-2 bg-zinc-800/50 rounded-lg text-xs font-medium text-emerald-500 flex justify-center items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" /> Uploading...
+                          </div>
+                        ) : doc ? (
+                          <>
+                            <button 
+                              onClick={() => BusinessService.downloadDocument(doc.id, doc.file_name)}
+                              className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors text-center block"
+                            >
+                              View File
+                            </button>
+                            <label className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs font-medium transition-colors text-center cursor-pointer">
+                              Replace
+                              <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => {
+                                if(e.target.files && e.target.files[0]) {
+                                  handleDocumentReplace(doc.id, docType, e.target.files[0]);
+                                }
+                              }} />
+                            </label>
+                            <button onClick={() => handleDocumentDelete(doc.id)} className="w-10 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg flex items-center justify-center transition-colors">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition-colors text-center cursor-pointer flex justify-center items-center gap-2">
+                            <UploadCloud className="w-4 h-4" /> Upload Document
+                            <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" onChange={(e) => {
+                                if(e.target.files && e.target.files[0]) {
+                                  handleDocumentUpload(docType, e.target.files[0]);
+                                }
+                              }} />
+                          </label>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+            )}
 
             {/* AI Actionable Advice */}
             {activeTab === 'overview' && data?.ai_business_advice && (

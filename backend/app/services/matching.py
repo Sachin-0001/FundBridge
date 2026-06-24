@@ -4,6 +4,7 @@ from app.repositories.business import BusinessRepository
 from app.repositories.bank import BankRepository
 from app.models.business import BusinessProfile
 from app.models.bank import BankProfile
+from app.models.application import DocumentStatus
 
 class MatchingService:
     def __init__(self, session: AsyncSession):
@@ -109,7 +110,36 @@ class MatchingService:
             score += 5
             passed_rules.append("No strict GST requirement")
 
-        recommendation = "Strong Match" if score >= 80 else "Good Match" if score >= 60 else "Poor Match"
+        # Document Verification: 10
+        doc_reqs = bank.document_requirements
+        if doc_reqs and len(doc_reqs) > 0:
+            required_types = [req.document_type for req in doc_reqs if req.required]
+            if not required_types:
+                score += 10
+                passed_rules.append("No specific documents required")
+            else:
+                total_reqs = len(required_types)
+                uploaded_types = [
+                    doc.document_type for doc in business.documents 
+                    if doc.status in (DocumentStatus.UPLOADED, DocumentStatus.VERIFIED)
+                ]
+                # Count how many of the required ones are uploaded
+                uploaded_count = sum(1 for req_type in required_types if req_type in uploaded_types)
+                doc_score = (uploaded_count / total_reqs) * 10
+                score += doc_score
+                
+                if doc_score == 10:
+                    passed_rules.append(f"All {total_reqs} required documents uploaded")
+                elif doc_score > 0:
+                    passed_rules.append(f"{uploaded_count} out of {total_reqs} required documents uploaded")
+                    failed_rules.append(f"Missing {total_reqs - uploaded_count} required documents")
+                else:
+                    failed_rules.append(f"None of the {total_reqs} required documents are uploaded")
+        else:
+            score += 10
+            passed_rules.append("No document requirements set by bank")
+
+        recommendation = "Strong Match" if score >= 85 else "Good Match" if score >= 65 else "Poor Match"
         return score, passed_rules, failed_rules, recommendation
 
     async def compute_matches_for_business(self, business_id: int):

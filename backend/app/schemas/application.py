@@ -27,3 +27,35 @@ class ApplicationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+from app.models.application import DocumentType, DocumentStatus
+
+class DocumentBase(BaseModel):
+    document_type: DocumentType
+
+class DocumentCreate(DocumentBase):
+    pass
+
+class DocumentResponse(DocumentBase):
+    id: int
+    business_id: int
+    file_name: str
+    mime_type: str
+    file_size: int
+    status: DocumentStatus
+    verified_at: Optional[datetime] = None
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DocumentDownloadResponse(BaseModel):
+    """Response for document download endpoint"""
+    file_name: str
+    mime_type: str
+    file_size: int
+    file_data: bytes
+
+    class Config:
+        from_attributes = True
