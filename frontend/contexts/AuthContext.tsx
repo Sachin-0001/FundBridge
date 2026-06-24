@@ -55,13 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const isLoggingIn = React.useRef(false);
+
   useEffect(() => {
     fetchUser();
   }, []);
 
   // Protect routes based on role
   useEffect(() => {
-    if (loading) return;
+    if (loading || isLoggingIn.current) return;
 
     const publicPaths = ["/", "/login", "/register", "/invest"];
     if (!user && !publicPaths.includes(pathname)) {
@@ -76,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router]);
 
   const login = async (token: string, redirectUrl?: string) => {
+    isLoggingIn.current = true;
     localStorage.setItem("token", token);
     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     await fetchUser();
@@ -89,6 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else if (currentUser.data.role === "BANK") router.push("/dashboard/bank");
       else if (currentUser.data.role === "ADMIN") router.push("/dashboard/admin");
     }
+    
+    setTimeout(() => {
+      isLoggingIn.current = false;
+    }, 500);
   };
 
   const logout = () => {
