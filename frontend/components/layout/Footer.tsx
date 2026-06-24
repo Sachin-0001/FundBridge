@@ -1,16 +1,20 @@
+import Link from "next/link";
+import { Shield } from "lucide-react";
+
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50 py-12 mt-auto">
-      <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center">
-        <div className="mb-4 md:mb-0">
-          <p className="text-sm text-muted-foreground">
+    <footer className="border-t border-zinc-800/50 bg-[#0A0A0A] py-8 mt-auto z-10 relative">
+      <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex items-center gap-2 mb-4 md:mb-0">
+          <Shield className="w-5 h-5 text-blue-500" />
+          <p className="text-sm font-medium text-zinc-400">
             © {new Date().getFullYear()} FundBridge AI. All rights reserved.
           </p>
         </div>
-        <div className="flex gap-4 text-sm text-muted-foreground">
-          <a href="#" className="hover:text-primary">Terms</a>
-          <a href="#" className="hover:text-primary">Privacy</a>
-          <a href="#" className="hover:text-primary">Contact</a>
+        <div className="flex gap-6 text-sm font-medium text-zinc-500">
+          <Link href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link>
+          <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+          <Link href="/contact" className="hover:text-indigo-400 transition-colors">Contact</Link>
         </div>
       </div>
     </footer>

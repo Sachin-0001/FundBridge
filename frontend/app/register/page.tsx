@@ -16,6 +16,9 @@ const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string(),
   role: z.enum(["BUSINESS", "BANK"]),
+  agreeTerms: z.boolean().refine(val => val === true, {
+    message: "You must agree to the Terms of Service and Privacy Policy"
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -45,6 +48,7 @@ function RegisterForm() {
   });
 
   const selectedRole = watch("role");
+  const agreeTerms = watch("agreeTerms");
 
   const onSubmit = async (data: RegisterFormValues) => {
     try {
@@ -167,9 +171,24 @@ function RegisterForm() {
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword.message}</p>}
             </div>
 
+            <div className="flex items-start gap-3 pt-2">
+              <input
+                type="checkbox"
+                id="agreeTerms"
+                {...register("agreeTerms")}
+                className={`mt-1 w-4 h-4 rounded border-zinc-700 bg-zinc-900 focus:ring-2 focus:ring-offset-0 ${isBusiness ? "text-blue-500 focus:ring-blue-500/50" : "text-emerald-500 focus:ring-emerald-500/50"}`}
+              />
+              <div className="flex flex-col">
+                <label htmlFor="agreeTerms" className="text-sm text-muted-foreground select-none leading-relaxed">
+                  I agree to the <Link href="/terms" className="text-foreground hover:underline">Terms of Service</Link> and have read the <Link href="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
+                </label>
+                {errors.agreeTerms && <p className="text-red-500 text-xs mt-1">{errors.agreeTerms.message}</p>}
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !agreeTerms}
               className="w-full bg-foreground text-background font-medium py-2.5 rounded-xl hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4 group"
             >
               {isLoading ? (
