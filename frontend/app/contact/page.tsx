@@ -48,7 +48,7 @@ export default function ContactPage() {
         >
           <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">Contact Us</h1>
           <p className="text-zinc-400 mb-12 text-lg max-w-2xl">
-            Have questions about our platform or interested in a partnership? We're here to help. Reach out to our team below.
+            Have questions about our platform or interested in a partnership? We&apos;re here to help. Reach out to our team below.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -107,7 +107,7 @@ export default function ContactPage() {
                       <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
                       <div>
                         <h4 className="text-sm font-semibold text-emerald-400">Message sent successfully</h4>
-                        <p className="text-xs text-emerald-400/80 mt-1">We'll get back to you as soon as possible.</p>
+                        <p className="text-xs text-emerald-400/80 mt-1">We&apos;ll get back to you as soon as possible.</p>
                       </div>
                     </motion.div>
                   )}
