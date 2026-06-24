@@ -140,6 +140,18 @@ These components render on the server, which result in zero javascript bundle si
 - interactive chatbot to businesses
 - Generate reports for buisness insights
 
+### Matching rule
+
+- Revenue 20
+- Debt Ratio 25
+- Years 15
+- Tenure 10
+- Industry 10
+- Location 5
+- GST 5
+- Documents 10
+
+These are compared to the bank's requirements and if they align, the buisness is awarded the points assigned and aggregated at the end
 
 ### Tradeoffs
 
