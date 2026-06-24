@@ -22,7 +22,7 @@ class MatchingService:
         passed_rules = []
         failed_rules = []
 
-        # Revenue: 25
+        # Revenue: 20
         if reqs.min_revenue is not None:
             if business.annual_revenue >= reqs.min_revenue:
                 score += 25
@@ -33,7 +33,7 @@ class MatchingService:
             score += 25
             passed_rules.append("No minimum revenue requirement")
 
-        # Debt Ratio: 30 (+10 points)
+        # Debt Ratio: 25 (+10 points)
         # ratio = existing_debt / annual_revenue
         ratio = (business.existing_debt / business.annual_revenue) if business.annual_revenue and business.annual_revenue > 0 else 0
         if reqs.max_debt_to_revenue_ratio is not None:
@@ -105,8 +105,6 @@ class MatchingService:
             else:
                 failed_rules.append("Business is not GST registered, which is required")
         else:
-            # If bank doesn't strictly require it, we might still award points if the business has it, 
-            # but to keep it simple, if no rule is set, they get the points.
             score += 5
             passed_rules.append("No strict GST requirement")
 
