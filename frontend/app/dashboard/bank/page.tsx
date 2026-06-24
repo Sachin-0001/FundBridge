@@ -221,7 +221,7 @@ export default function BankDashboard() {
   return (
     <div className="flex min-h-screen bg-[#0A0A0A] text-zinc-100 selection:bg-emerald-500/30 font-sans">
       {/* Sidebar - Stripe/Ramp inspired minimalism */}
-      <aside className="w-[240px] border-r border-zinc-800/50 bg-[#0F0F0F] flex-col hidden md:flex sticky top-0 h-screen overflow-y-auto">
+      <aside className="cursor-pointer w-[240px] border-r border-zinc-800/50 bg-[#0F0F0F] flex-col hidden md:flex sticky top-0 h-screen overflow-y-auto">
         {/* <div className="h-16 flex items-center px-6">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded bg-emerald-500 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
@@ -683,7 +683,7 @@ export default function BankDashboard() {
                   </div>
 
                   <div className="flex justify-end">
-                    <button type="submit" disabled={isSavingProfile} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <button type="submit" disabled={isSavingProfile} className="cursor-pointer px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                       {isSavingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Profile"}
                     </button>
                   </div>

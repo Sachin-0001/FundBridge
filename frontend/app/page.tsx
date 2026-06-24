@@ -104,11 +104,11 @@ function BusinessLanding() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/register" passHref>
-              <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
+              <Button size="lg" className="cursor-pointer rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+            <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
               Learn More
             </Button>
           </div>
@@ -244,7 +244,7 @@ function BusinessLanding() {
                             <div className="text-[10px] text-zinc-500">Match Score: {95 - i}%</div>
                           </div>
                         </div>
-                        <button className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium rounded transition-colors">Apply</button>
+                        <button className="cursor-pointer px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-medium rounded transition-colors">Apply</button>
                       </div>
                     ))}
                   </motion.div>
@@ -263,7 +263,7 @@ function BusinessLanding() {
                         <div className="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-1.5 text-xs text-zinc-300">$1,000,000</div>
                       </div>
                       <div className="pt-2">
-                        <button className="w-full py-1.5 bg-blue-500 text-white text-xs font-medium rounded transition-colors">Save Changes</button>
+                        <button className="cursor-pointer w-full py-1.5 bg-blue-500 text-white text-xs font-medium rounded transition-colors">Save Changes</button>
                       </div>
                     </div>
                   </motion.div>
@@ -310,11 +310,11 @@ function BusinessLanding() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/borrow" passHref>
-            <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
+            <Button size="lg" className="cursor-pointer rounded-full px-8 h-14 text-base shadow-lg shadow-blue-500/25 bg-blue-500 hover:bg-blue-600 text-white transition-transform hover:scale-105">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+          <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
             Contact Sales
           </Button>
         </div>
@@ -342,11 +342,11 @@ function BankLanding() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/register" passHref>
-              <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
+              <Button size="lg" className="cursor-pointer rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
                 Register Bank <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+            <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
               Request Demo
             </Button>
           </div>
@@ -508,11 +508,11 @@ function BankLanding() {
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
           <Link href="/register" passHref>
-            <Button size="lg" className="rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
+            <Button size="lg" className="cursor-pointer rounded-full px-8 h-14 text-base shadow-lg shadow-emerald-500/25 bg-emerald-600 hover:bg-emerald-700 text-white transition-transform hover:scale-105">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+          <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
             Contact Sales
           </Button>
         </div>

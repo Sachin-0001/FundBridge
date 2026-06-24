@@ -361,7 +361,7 @@ export default function AdminDashboardPage() {
                     <FileText className="w-5 h-5 text-blue-400" />
                     Review Application
                   </h3>
-                  <button onClick={closeDrawer} className="p-2 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400 hover:text-white">
+                  <button onClick={closeDrawer} className="cursor-pointer p-2 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400 hover:text-white">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -498,7 +498,7 @@ export default function AdminDashboardPage() {
                       {modalState.type === 'block' && <><ShieldAlert className="w-5 h-5 text-red-400" /> Block Application</>}
                       {modalState.type === 'requestInfo' && <><Info className="w-5 h-5 text-blue-400" /> Request Information</>}
                     </h3>
-                    <button onClick={closeModal} className="text-zinc-500 hover:text-zinc-300 transition-colors">
+                    <button onClick={closeModal} className="cursor-pointer text-zinc-500 hover:text-zinc-300 transition-colors">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
@@ -540,14 +540,14 @@ export default function AdminDashboardPage() {
                     <button 
                       onClick={closeModal}
                       disabled={loadingAction}
-                      className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors"
+                      className="cursor-pointer px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm font-medium transition-colors"
                     >
                       Cancel
                     </button>
                     <button 
                       onClick={executeAction}
                       disabled={loadingAction}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                      className={`cursor-pointer px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
                         modalState.type === 'forward' ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 
                         modalState.type === 'block' ? 'bg-red-600 hover:bg-red-500 text-white' : 
                         'bg-blue-600 hover:bg-blue-500 text-white'

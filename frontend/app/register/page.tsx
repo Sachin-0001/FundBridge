@@ -180,7 +180,7 @@ function RegisterForm() {
               />
               <div className="flex flex-col">
                 <label htmlFor="agreeTerms" className="text-sm text-muted-foreground select-none leading-relaxed">
-                  I agree to the <Link href="/terms" className="text-foreground hover:underline">Terms of Service</Link> and have read the <Link href="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
+                  I agree to the <Link href="/terms" className="cursor-pointer text-foreground hover:underline">Terms of Service</Link> and have read the <Link href="/privacy" className="cursor-pointer text-foreground hover:underline">Privacy Policy</Link>.
                 </label>
                 {errors.agreeTerms && <p className="text-red-500 text-xs mt-1">{errors.agreeTerms.message}</p>}
               </div>
@@ -189,7 +189,7 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={isLoading || !agreeTerms}
-              className="w-full bg-foreground text-background font-medium py-2.5 rounded-xl hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4 group"
+              className="cursor-pointer w-full bg-foreground text-background font-medium py-2.5 rounded-xl hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 mt-4 group"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -204,7 +204,7 @@ function RegisterForm() {
           <div className="mt-8 pt-6 border-t border-border/50 text-center">
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/login" className="text-foreground font-medium hover:underline">
+              <Link href="/login" className="cursor-pointer text-foreground font-medium hover:underline">
                 Sign in
               </Link>
             </p>

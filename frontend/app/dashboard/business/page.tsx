@@ -317,7 +317,7 @@ export default function BusinessDashboard() {
     <div className="flex h-screen bg-[#0A0A0A] text-zinc-100 overflow-hidden font-sans selection:bg-blue-500/30">
       
       {/* Sidebar - Vercel/Linear minimal style */}
-      <aside className="w-[240px] border-r border-zinc-800/80 bg-[#0F0F0F] flex-col hidden md:flex shrink-0">
+      <aside className="cursor-pointer w-[240px] border-r border-zinc-800/80 bg-[#0F0F0F] flex-col hidden md:flex shrink-0">
         <div className="p-6">
           {/* <div className="flex items-center gap-3 mb-8">
             <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
@@ -390,7 +390,7 @@ export default function BusinessDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-xs font-medium text-zinc-400 hidden sm:block">{currentDate}</div>
-            {/* <button className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
+            {/* <button className="cursor-pointer h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 hover:bg-blue-500/20 transition-colors border border-blue-500/20">
               <Zap className="w-4 h-4" />
             </button> */}
           </div>
@@ -463,7 +463,7 @@ export default function BusinessDashboard() {
                     <p className="text-xs font-medium text-zinc-500 mb-1 uppercase tracking-wider">Profile Status</p>
                     <h3 className="text-2xl font-semibold">{data?.profile_completion || 100}%</h3>
                   </div>
-                  <button className="w-full mt-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md text-xs font-medium transition-colors">
+                  <button className="cursor-pointer w-full mt-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-md text-xs font-medium transition-colors">
                     Edit Profile
                   </button>
                 </Card>
@@ -552,7 +552,7 @@ export default function BusinessDashboard() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-zinc-100">Top Matching Lenders</h3>
-                <button className="text-xs font-medium text-blue-500 hover:text-blue-400 transition-colors flex items-center">
+                <button className="cursor-pointer text-xs font-medium text-blue-500 hover:text-blue-400 transition-colors flex items-center">
                   View All Matches <ChevronRight className="w-3 h-3 ml-1" />
                 </button>
               </div>
@@ -706,7 +706,7 @@ export default function BusinessDashboard() {
                                   Withdraw
                                 </button>
                               )}
-                              <button className="text-zinc-400 hover:text-zinc-200 transition-colors text-xs font-medium">
+                              <button className="cursor-pointer text-zinc-400 hover:text-zinc-200 transition-colors text-xs font-medium">
                                 View
                               </button>
                             </td>
@@ -851,7 +851,7 @@ export default function BusinessDashboard() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-zinc-500">
                       <p className="mb-4">Your AI Funding Report hasn&apos;t been generated yet.</p>
-                      <button onClick={handleGenerateReport} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                      <button onClick={handleGenerateReport} className="cursor-pointer px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
                         <Zap className="w-4 h-4" /> Generate AI Report
                       </button>
                     </div>
@@ -957,7 +957,7 @@ export default function BusinessDashboard() {
                     <button 
                       type="submit" 
                       disabled={isSavingProfile}
-                      className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
+                      className="cursor-pointer flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-800 disabled:text-zinc-500 text-white rounded-lg text-sm font-medium transition-colors"
                     >
                       {isSavingProfile ? (
                         <><Loader2 className="w-4 h-4 animate-spin" /> Updating Profile & AI...</>
@@ -1177,7 +1177,7 @@ export default function BusinessDashboard() {
                   <button 
                     type="submit"
                     disabled={!chatInput.trim() || isChatLoading}
-                    className="absolute right-2 p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-full transition-colors"
+                    className="cursor-pointer absolute right-2 p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-800 disabled:text-zinc-600 text-white rounded-full transition-colors"
                   >
                     <Send className="w-4 h-4" />
                   </button>

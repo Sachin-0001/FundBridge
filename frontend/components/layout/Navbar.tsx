@@ -39,7 +39,7 @@ export function Navbar() {
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full">
       <div className="container mx-auto px-4 flex h-16 items-center justify-between">
-        <Link href={homeHref} className="flex items-center space-x-2">
+        <Link href={homeHref} className="cursor-pointer flex items-center space-x-2">
           <span className="font-bold text-xl tracking-tight text-primary">FundBridge</span>
         </Link>
         <div className="flex items-center gap-4">
@@ -69,7 +69,7 @@ export function Navbar() {
                   <div className="absolute right-0 mt-2 w-48 bg-card border rounded-md shadow-lg py-1 z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2">
                     <Link 
                       href={`/dashboard/${user.role.toLowerCase()}`} 
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors cursor-pointer"
+                      className="cursor-pointer flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-muted transition-colors cursor-pointer"
                       onClick={() => setDropdownOpen(false)}
                     >
                       <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
@@ -78,7 +78,7 @@ export function Navbar() {
                     <div className="h-px bg-border my-1" />
                     <button 
                       onClick={handleLogout}
-                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
+                      className="cursor-pointer flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left"
                     >
                       <LogOut className="h-4 w-4" />
                       <span>Logout</span>
@@ -89,10 +89,10 @@ export function Navbar() {
             </div>
           ) : (
             <>
-              <Link href="/login" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              <Link href="/login" className="cursor-pointer text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                 Login
               </Link>
-              <Link href="/register?type=business" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+              <Link href="/register?type=business" className="cursor-pointer px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
                 Register
               </Link>
             </>

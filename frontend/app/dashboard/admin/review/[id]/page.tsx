@@ -55,8 +55,8 @@ export default function ReviewPage() {
           </div>
           <div className="bg-white p-4 rounded shadow">
             <h3 className="font-medium">Actions</h3>
-            <button className="btn btn-primary w-full mb-2" onClick={handleForward}>Forward to Bank</button>
-            <button className="btn btn-danger w-full" onClick={handleBlock}>Block Request</button>
+            <button className="cursor-pointer btn btn-primary w-full mb-2" onClick={handleForward}>Forward to Bank</button>
+            <button className="cursor-pointer btn btn-danger w-full" onClick={handleBlock}>Block Request</button>
           </div>
         </div>
       )}

@@ -12,9 +12,9 @@ export function Footer() {
           </p>
         </div>
         <div className="flex gap-6 text-sm font-medium text-zinc-500">
-          <Link href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link>
-          <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy Policy</Link>
-          <Link href="/contact" className="hover:text-indigo-400 transition-colors">Contact</Link>
+          <Link href="/terms" className="cursor-pointer hover:text-blue-400 transition-colors">Terms of Service</Link>
+          <Link href="/privacy" className="cursor-pointer hover:text-emerald-400 transition-colors">Privacy Policy</Link>
+          <Link href="/contact" className="cursor-pointer hover:text-indigo-400 transition-colors">Contact</Link>
         </div>
       </div>
     </footer>

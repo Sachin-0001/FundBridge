@@ -105,7 +105,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium">Password</label>
-                <Link href="#" className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
+                <Link href="#" className="cursor-pointer text-xs text-blue-500 hover:text-blue-400 transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
               {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <input
                 type="checkbox"
                 id="rememberMe"
@@ -131,7 +131,7 @@ export default function LoginPage() {
               <label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer select-none">
                 Remember me for 30 days
               </label>
-            </div>
+            </div> */}
 
             <div className="flex items-start gap-3 pt-2">
               <input
@@ -142,7 +142,7 @@ export default function LoginPage() {
               />
               <div className="flex flex-col">
                 <label htmlFor="agreeTerms" className="text-sm text-muted-foreground select-none leading-relaxed">
-                  I agree to the <Link href="/terms" className="text-foreground hover:underline">Terms of Service</Link> and have read the <Link href="/privacy" className="text-foreground hover:underline">Privacy Policy</Link>.
+                  I agree to the <Link href="/terms" className="cursor-pointer text-foreground hover:underline">Terms of Service</Link> and have read the <Link href="/privacy" className="cursor-pointer text-foreground hover:underline">Privacy Policy</Link>.
                 </label>
                 {errors.agreeTerms && <p className="text-red-500 text-xs mt-1">{errors.agreeTerms.message}</p>}
               </div>
@@ -151,7 +151,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || !agreeTerms}
-              className="w-full bg-foreground text-background font-medium py-2.5 rounded-xl hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
+              className="cursor-pointer w-full bg-foreground text-background font-medium py-2.5 rounded-xl hover:bg-foreground/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -168,14 +168,14 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-3">
               <Link
                 href="/register?type=business"
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors text-sm font-medium"
+                className="cursor-pointer flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors text-sm font-medium"
               >
                 <Building2 className="w-4 h-4 text-blue-500" />
                 Business
               </Link>
               <Link
                 href="/register?type=bank"
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors text-sm font-medium"
+                className="cursor-pointer flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-border/50 hover:bg-muted/50 transition-colors text-sm font-medium"
               >
                 <Landmark className="w-4 h-4 text-indigo-500" />
                 Bank
