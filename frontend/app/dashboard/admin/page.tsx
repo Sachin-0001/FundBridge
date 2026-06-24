@@ -329,7 +329,7 @@ export default function AdminDashboardPage() {
                 {apps.length > 0 && filtered.length === 0 && query && (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-zinc-500">
-                      No applications found matching "{query}"
+                      No applications found matching &quot;{query}&quot;
                     </td>
                   </tr>
                 )}
