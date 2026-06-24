@@ -108,10 +108,12 @@ function BusinessLanding() {
                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
+            <Link href = "/contact" passHref> 
             <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
               Learn More
             </Button>
-          </div>
+            </Link>
+          </div>  
         </div>
         <div className="w-full max-w-5xl relative mt-8 lg:mt-12">
           {/* Interactive Notice */}
@@ -314,9 +316,11 @@ function BusinessLanding() {
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
-            Contact Sales
-          </Button>
+          <Link href = "/contact" passHref>
+            <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+              Contact Sales
+            </Button> 
+          </Link>
         </div>
       </section>
     </div>
@@ -346,9 +350,11 @@ function BankLanding() {
                 Register Bank <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
-              Request Demo
-            </Button>
+            <Link href = "/contact" passHref>
+              <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+                Contact Sales
+              </Button> 
+            </Link>
           </div>
         </div>
         <div className="w-full max-w-5xl relative mt-8 lg:mt-12">
@@ -512,9 +518,11 @@ function BankLanding() {
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
-          <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
-            Contact Sales
-          </Button>
+          <Link href = "/contact" passHref>
+            <Button size="lg" variant="outline" className="cursor-pointer rounded-full px-8 h-14 text-base backdrop-blur-sm bg-background/50 border-border/50 hover:bg-muted/50">
+              Contact Sales
+            </Button>
+          </Link> 
         </div>
       </section>
     </div>

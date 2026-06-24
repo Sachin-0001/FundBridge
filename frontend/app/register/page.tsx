@@ -82,7 +82,12 @@ function RegisterForm() {
       <div className={`absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${isBusiness ? "bg-blue-500/15" : "bg-emerald-500/15"}`} />
       <div className={`absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none transition-colors duration-700 ${isBusiness ? "bg-indigo-500/15" : "bg-teal-500/15"}`} />
 
-      <div className="w-full max-w-md relative z-10">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md relative z-10"
+      >
         <div className="bg-card/40 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl p-8 relative overflow-hidden transition-all duration-500">
           <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r transition-all duration-700 ${isBusiness ? "from-blue-500 to-cyan-500" : "from-emerald-500 to-green-500"}`} />
           
@@ -210,7 +215,7 @@ function RegisterForm() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }
