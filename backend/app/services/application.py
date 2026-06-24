@@ -112,8 +112,12 @@ class ApplicationService:
             bk = app.bank
             if bk:
                 app_dict["bank"] = {
-                    "id": bk.id, "user_id": bk.user_id, "institution_name": bk.institution_name,
-                    "institution_type": bk.institution_type, "country": bk.country, "city": bk.city
+                    "id": bk.id,
+                    "user_id": bk.user_id,
+                    "institution_name": bk.institution_name,
+                    "institution_type": bk.institution_type,
+                    "country": getattr(bk, 'country', None),
+                    "city": getattr(bk, 'city', None)
                 }
 
         return ApplicationResponse.model_validate(app_dict)

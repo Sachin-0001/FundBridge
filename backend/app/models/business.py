@@ -43,6 +43,8 @@ class BusinessProfile(Base):
     funding_goal = Column(Float, nullable=False)
     funding_purpose = Column(SQLEnum(FundingPurpose), nullable=False)
     loan_type = Column(SQLEnum(LoanType), nullable=False)
+    preferred_tenure_min = Column(Integer, nullable=True)
+    preferred_tenure_max = Column(Integer, nullable=True)
     
     # Step 3: Financial Health
     annual_revenue = Column(Float, nullable=False)

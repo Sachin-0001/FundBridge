@@ -45,16 +45,32 @@ class MatchingService:
             score += 30
             passed_rules.append("No maximum Debt-to-Revenue requirement")
 
-        # Years: 25 (+10 points)
+        # Years: 15
         if reqs.min_years_in_business is not None:
             if business.years_in_operation >= reqs.min_years_in_business:
-                score += 25
+                score += 15
                 passed_rules.append(f"Years in business meets minimum of {reqs.min_years_in_business}")
             else:
                 failed_rules.append(f"Years in business {business.years_in_operation} below minimum {reqs.min_years_in_business}")
         else:
             score += 15
             passed_rules.append("No minimum years in business requirement")
+            
+        # Tenure: 10
+        b_min = business.preferred_tenure_min
+        b_max = business.preferred_tenure_max
+        bank_min = bank.min_loan_tenor
+        bank_max = bank.max_loan_tenor
+        
+        if b_min is not None and b_max is not None and bank_min is not None and bank_max is not None:
+            if b_min <= bank_max and b_max >= bank_min:
+                score += 10
+                passed_rules.append(f"Preferred tenure ({b_min}-{b_max}m) overlaps with bank's ({bank_min}-{bank_max}m)")
+            else:
+                failed_rules.append(f"Preferred tenure ({b_min}-{b_max}m) does not overlap with bank's ({bank_min}-{bank_max}m)")
+        else:
+            score += 10
+            passed_rules.append("No strict tenure requirement from either side")
 
         # Industry: 10
         if reqs.preferred_industries and len(reqs.preferred_industries) > 0:

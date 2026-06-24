@@ -37,6 +37,8 @@ class BusinessProfileBase(BaseModel):
     funding_goal: float
     funding_purpose: FundingPurpose
     loan_type: LoanType
+    preferred_tenure_min: Optional[int] = None
+    preferred_tenure_max: Optional[int] = None
     
     # Step 3
     annual_revenue: float
@@ -63,6 +65,8 @@ class BusinessProfileUpdate(BusinessProfileBase):
     funding_goal: Optional[float] = None
     funding_purpose: Optional[FundingPurpose] = None
     loan_type: Optional[LoanType] = None
+    preferred_tenure_min: Optional[int] = None
+    preferred_tenure_max: Optional[int] = None
     annual_revenue: Optional[float] = None
     annual_net_profit: Optional[float] = None
     existing_debt: Optional[float] = None
