@@ -4,6 +4,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { formatStatus, getStatusColor } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { 
   Building2, 
   Users, 
@@ -195,6 +196,17 @@ export default function BankDashboard() {
       avgAiScore
     };
   }, [matches]);
+
+  const applicationsByIndustry = useMemo(() => {
+    const counts: Record<string, number> = {};
+    applications.forEach(app => {
+      const ind = app.business?.industry || "Unknown";
+      counts[ind] = (counts[ind] || 0) + 1;
+    });
+    return Object.keys(counts)
+      .map(key => ({ name: key, value: counts[key] }))
+      .sort((a, b) => b.value - a.value);
+  }, [applications]);
 
   if (loading) {
     return (
@@ -467,42 +479,65 @@ export default function BankDashboard() {
             )}
 
             {activeTab === 'applications' && (
-              <div className="grid grid-cols-1 gap-4">
-                {applications.length === 0 ? (
-                  <div className="p-12 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-center">
-                    <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
-                      <FileText className="w-5 h-5 text-zinc-600" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 gap-4">
+                  {applications.length === 0 ? (
+                    <div className="p-12 border border-dashed border-zinc-800 rounded-xl flex flex-col items-center justify-center text-center">
+                      <div className="w-12 h-12 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
+                        <FileText className="w-5 h-5 text-zinc-600" />
+                      </div>
+                      <h3 className="text-sm font-medium text-zinc-300">No applications yet</h3>
+                      <p className="text-xs text-zinc-500 mt-1">Wait for businesses to apply to your bank.</p>
                     </div>
-                    <h3 className="text-sm font-medium text-zinc-300">No applications yet</h3>
-                    <p className="text-xs text-zinc-500 mt-1">Wait for businesses to apply to your bank.</p>
+                  ) : (
+                    applications.map(app => (
+                      <div key={app.id} className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer" onClick={() => setSelectedApp(app)}>
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
+                            {app.business?.company_name?.substring(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-zinc-100">{app.business?.company_name}</h3>
+                            <p className="text-xs text-zinc-400 mt-1">{app.business?.industry} • {app.business?.city}, {app.business?.country}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Requested</p>
+                            <p className="text-sm font-semibold text-zinc-200">{formatCurrency(app.amount_requested)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Status</p>
+                            <span className={`px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wide ${getStatusColor(app.status)}`}>
+                              {formatStatus(app.status)}
+                            </span>
+                          </div>
+                          <ChevronRight className="w-5 h-5 text-zinc-600" />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {applications.length > 0 && (
+                  <div className="p-6 bg-[#121212] border border-zinc-800/80 rounded-xl">
+                    <h3 className="text-sm font-semibold text-zinc-200 mb-6">Applications by Industry</h3>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={applicationsByIndustry}>
+                          <XAxis dataKey="name" stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#52525b" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+                          <Tooltip 
+                            cursor={{ fill: '#27272a', opacity: 0.4 }}
+                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }}
+                            itemStyle={{ color: '#34d399' }}
+                            labelStyle={{ color: '#a1a1aa' }}
+                          />
+                          <Bar dataKey="value" name="Applications" fill="#10b981" radius={[4, 4, 0, 0]} barSize={40} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
-                ) : (
-                  applications.map(app => (
-                    <div key={app.id} className="p-5 bg-[#121212] border border-zinc-800/80 rounded-xl hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer" onClick={() => setSelectedApp(app)}>
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-300 font-bold border border-zinc-700">
-                          {app.business?.company_name?.substring(0,2).toUpperCase()}
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-zinc-100">{app.business?.company_name}</h3>
-                          <p className="text-xs text-zinc-400 mt-1">{app.business?.industry} • {app.business?.city}, {app.business?.country}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Requested</p>
-                          <p className="text-sm font-semibold text-zinc-200">{formatCurrency(app.amount_requested)}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Status</p>
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wide ${getStatusColor(app.status)}`}>
-                            {formatStatus(app.status)}
-                          </span>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-zinc-600" />
-                      </div>
-                    </div>
-                  ))
                 )}
               </div>
             )}

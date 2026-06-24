@@ -4,6 +4,7 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ReactQueryProvider } from "@/lib/react-query";
+import { Analytics } from "@vercel/analytics/next";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <Footer />
           </AuthProvider>
         </ReactQueryProvider>
+        <Analytics />
       </body>
     </html>
   );
