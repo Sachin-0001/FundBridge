@@ -34,7 +34,7 @@ class AIService:
         You are an expert AI underwriting assistant for a business lending platform.
         Given the following business data, you must evaluate their "Funding Readiness Score" (0 to 100),
         provide a short 2-sentence summary (ai_summary) intended for lenders to read regarding their risk profile,
-        and provide a short 2-sentence advice (ai_business_advice) intended for the business owner explaining where they stand and what could be done to increase their chances of getting more banks.
+        and provide a paragraph advice (ai_business_advice) intended for the business owner explaining where they stand and what could be done to increase their chances of getting more banks.
 
         Business Data:
         {json.dumps(business_data, indent=2)}
@@ -46,8 +46,8 @@ class AIService:
         
         Respond ONLY with a raw JSON object containing exactly three keys:
         - "readiness_score": an integer between 0 and 100
-        - "ai_summary": a string containing the 2-sentence summary for lenders
-        - "ai_business_advice": a string containing the 2-sentence advice for the business owner
+        - "ai_summary": a string containing the summary for lenders in a paragraph
+        - "ai_business_advice": a string containing the paragraph advice for the business owner
 
         Do NOT wrap the JSON in Markdown formatting (no ```json ... ```). Output just the JSON.
         """
