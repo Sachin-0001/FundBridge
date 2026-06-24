@@ -20,6 +20,11 @@ class ApplicationResponse(BaseModel):
     status: ApplicationStatus
     created_at: datetime
     updated_at: Optional[datetime] = None
+    reviewed_by_admin: Optional[int] = None
+    reviewed_at: Optional[datetime] = None
+    admin_notes: Optional[str] = None
+    blocked_reason: Optional[str] = None
+    forwarded_at: Optional[datetime] = None
 
     # Optional relationships to be populated if loaded
     business: Optional[dict] = None

@@ -153,5 +153,17 @@ async def seed():
             
         print("Done seeding.")
 
+        # Seed Admin user
+        admin_email = "admin@gmail.com"
+        result = await db.execute(select(User).where(User.email == admin_email))
+        admin_user = result.scalars().first()
+        if not admin_user:
+            admin_pwd = get_password_hash("admin123")
+            admin_user = User(email=admin_email, password_hash=admin_pwd, role=UserRole.ADMIN, is_verified=True)
+            db.add(admin_user)
+            await db.commit()
+            await db.refresh(admin_user)
+            print(f"Created admin user: {admin_email}")
+
 if __name__ == "__main__":
     asyncio.run(seed())

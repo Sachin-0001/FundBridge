@@ -139,6 +139,7 @@ class MatchingService:
             score += 10
             passed_rules.append("No document requirements set by bank")
 
+        score = round(score)
         recommendation = "Strong Match" if score >= 85 else "Good Match" if score >= 65 else "Poor Match"
         return score, passed_rules, failed_rules, recommendation
 

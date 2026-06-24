@@ -4,6 +4,8 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { PageContainer } from "@/components/layout/PageContainer";
+import { formatStatus, getStatusColor } from "@/lib/utils";
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, User, Loader2, Building2, 
@@ -182,7 +184,7 @@ export default function BusinessDashboard() {
       bank_id: bankId,
       amount_requested: data?.funding_goal || 0,
       purpose: data?.funding_purpose || "Working Capital",
-      status: "pending",
+      status: "PENDING_ADMIN_REVIEW",
       created_at: new Date().toISOString(),
       bank: bank
     };
@@ -212,7 +214,7 @@ export default function BusinessDashboard() {
 
     // Optimistic UI update
     queryClient.setQueryData(['businessApplications'], (oldData: any) => {
-      return (oldData || []).map((app: any) => app.id === appId ? { ...app, status: 'withdrawn' } : app);
+      return (oldData || []).map((app: any) => app.id === appId ? { ...app, status: 'WITHDRAWN' } : app);
     });
 
     try {
@@ -225,7 +227,7 @@ export default function BusinessDashboard() {
   };
 
   const hasApplied = (bankId: number) => {
-    return applications.some((app: any) => app.bank_id === bankId && app.status !== 'rejected' && app.status !== 'withdrawn' && app.status !== 'approved');
+    return applications.some((app: any) => app.bank_id === bankId && app.status !== 'REJECTED_BY_ADMIN' && app.status !== 'REJECTED_BY_BANK' && app.status !== 'WITHDRAWN' && app.status !== 'APPROVED' && app.status !== 'FUNDED');
   };
 
   const handleDocumentUpload = async (documentType: string, file: File) => {
@@ -688,16 +690,8 @@ export default function BusinessDashboard() {
                               </div>
                             </td>
                             <td className="px-5 py-4">
-                              <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide
-                                ${app.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
-                                  app.status === 'under_review' ? 'bg-blue-500/10 text-blue-500' :
-                                  app.status === 'waitlisted' ? 'bg-purple-500/10 text-purple-500' :
-                                  app.status === 'approved' ? 'bg-blue-500/10 text-blue-500' :
-                                  app.status === 'withdrawn' ? 'bg-zinc-500/10 text-zinc-400' :
-                                  'bg-red-500/10 text-red-500'
-                                }
-                              `}>
-                                {app.status.replace('_', ' ')}
+                              <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide ${getStatusColor(app.status)}`}>
+                                {formatStatus(app.status)}
                               </span>
                             </td>
                             <td className="px-5 py-4 hidden sm:table-cell text-xs text-zinc-400">
@@ -761,14 +755,8 @@ export default function BusinessDashboard() {
                           </div>
                         </div>
                         {doc && (
-                          <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide
-                            ${doc.status === 'UPLOADED' ? 'bg-amber-500/10 text-amber-500' :
-                              doc.status === 'VERIFIED' ? 'bg-blue-500/10 text-blue-500' :
-                              doc.status === 'REJECTED' ? 'bg-red-500/10 text-red-500' :
-                              'bg-zinc-500/10 text-zinc-400'
-                            }
-                          `}>
-                            {doc.status}
+                          <span className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wide ${getStatusColor(doc.status)}`}>
+                            {formatStatus(doc.status)}
                           </span>
                         )}
                         {!doc && (

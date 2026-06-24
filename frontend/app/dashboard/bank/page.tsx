@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { formatStatus, getStatusColor } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Building2, 
@@ -494,16 +495,8 @@ export default function BankDashboard() {
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] text-zinc-500 font-medium uppercase mb-1">Status</p>
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wide
-                            ${app.status === 'pending' ? 'bg-amber-500/10 text-amber-500' :
-                              app.status === 'under_review' ? 'bg-blue-500/10 text-blue-500' :
-                              app.status === 'waitlisted' ? 'bg-purple-500/10 text-purple-500' :
-                              app.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500' :
-                              app.status === 'withdrawn' ? 'bg-zinc-500/10 text-zinc-400' :
-                              'bg-red-500/10 text-red-500'
-                            }
-                          `}>
-                            {app.status.replace('_', ' ')}
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-medium uppercase tracking-wide ${getStatusColor(app.status)}`}>
+                            {formatStatus(app.status)}
                           </span>
                         </div>
                         <ChevronRight className="w-5 h-5 text-zinc-600" />
@@ -881,16 +874,8 @@ export default function BankDashboard() {
                   </div>
                   <div className="p-4 bg-zinc-800/50 border border-zinc-800 rounded-xl flex flex-col justify-center">
                     <p className="text-[10px] text-zinc-500 uppercase font-medium">Application Status</p>
-                    <span className={`mt-1 inline-flex w-max px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide
-                      ${selectedApp.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
-                        selectedApp.status === 'under_review' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                        selectedApp.status === 'waitlisted' ? 'bg-purple-500/10 text-purple-500 border border-purple-500/20' :
-                        selectedApp.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                        selectedApp.status === 'withdrawn' ? 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20' :
-                        'bg-red-500/10 text-red-500 border border-red-500/20'
-                      }
-                    `}>
-                      {selectedApp.status.replace('_', ' ')}
+                    <span className={`mt-1 inline-flex w-max px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${getStatusColor(selectedApp.status)}`}>
+                      {formatStatus(selectedApp.status)}
                     </span>
                   </div>
                 </div>
@@ -948,13 +933,13 @@ export default function BankDashboard() {
                   </button>
                 ) : (
                   <>
-                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'rejected')} className="flex-1 h-10 bg-zinc-800 hover:bg-red-500/20 text-white hover:text-red-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-red-500/30">
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'REJECTED_BY_BANK')} className="flex-1 h-10 bg-zinc-800 hover:bg-red-500/20 text-white hover:text-red-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-red-500/30">
                       Reject
                     </button>
-                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'waitlisted')} className="flex-1 h-10 bg-zinc-800 hover:bg-purple-500/20 text-white hover:text-purple-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-purple-500/30">
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'WAITLISTED')} className="flex-1 h-10 bg-zinc-800 hover:bg-purple-500/20 text-white hover:text-purple-400 rounded-lg text-sm font-medium transition-colors border border-transparent hover:border-purple-500/30">
                       Waitlist
                     </button>
-                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'approved')} className="flex-1 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                    <button onClick={() => handleUpdateStatus(selectedApp.id, 'APPROVED')} className="flex-1 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                       Approve Application
                     </button>
                   </>

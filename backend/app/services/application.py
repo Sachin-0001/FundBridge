@@ -49,6 +49,35 @@ class ApplicationService:
         apps = await self.repo.get_by_bank_id(bank.id)
         return [self._to_response(app) for app in apps]
 
+    # Admin functions
+    async def get_pending_for_admin(self, admin_user_id: int) -> list[ApplicationResponse]:
+        # Admin user validation can be done in endpoint; repository returns pending apps
+        apps = await self.repo.get_pending_admin_applications()
+        return [self._to_response(app) for app in apps]
+
+    async def get_all_for_admin(self, admin_user_id: int) -> list[ApplicationResponse]:
+        apps = await self.repo.get_all_applications()
+        return [self._to_response(app) for app in apps]
+
+    async def forward_application(self, admin_user_id: int, application_id: int, notes: str | None = None) -> ApplicationResponse:
+        # No extra permissions check here; endpoint should ensure admin
+        app = await self.repo.forward_application(application_id, admin_user_id, notes)
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
+        return self._to_response(app)
+
+    async def block_application(self, admin_user_id: int, application_id: int, blocked_reason: str | None = None, notes: str | None = None) -> ApplicationResponse:
+        app = await self.repo.block_application(application_id, admin_user_id, blocked_reason, notes)
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
+        return self._to_response(app)
+
+    async def request_more_info(self, admin_user_id: int, application_id: int, notes: str | None = None) -> ApplicationResponse:
+        app = await self.repo.request_more_info(application_id, admin_user_id, notes)
+        if not app:
+            raise HTTPException(status_code=404, detail="Application not found")
+        return self._to_response(app)
+
     async def update_status(self, bank_user_id: int, application_id: int, status: ApplicationStatus) -> ApplicationResponse:
         bank = await self.bank_repo.get_by_user_id(bank_user_id)
         if not bank:
@@ -90,6 +119,11 @@ class ApplicationService:
             "status": app.status,
             "created_at": app.created_at,
             "updated_at": app.updated_at,
+            "reviewed_by_admin": getattr(app, 'reviewed_by_admin', None),
+            "reviewed_at": getattr(app, 'reviewed_at', None),
+            "admin_notes": getattr(app, 'admin_notes', None),
+            "blocked_reason": getattr(app, 'blocked_reason', None),
+            "forwarded_at": getattr(app, 'forwarded_at', None),
         }
         
         # Load relationships if they were eager loaded

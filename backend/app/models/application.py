@@ -17,12 +17,16 @@ class DocumentStatus(str, enum.Enum):
     MISSING = "Missing"
 
 class ApplicationStatus(str, enum.Enum):
-    PENDING = "pending"
-    UNDER_REVIEW = "under_review"
-    WAITLISTED = "waitlisted"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    WITHDRAWN = "withdrawn"
+    PENDING_ADMIN_REVIEW = "PENDING_ADMIN_REVIEW"
+    FORWARDED_TO_BANK = "FORWARDED_TO_BANK"
+    UNDER_BANK_REVIEW = "UNDER_BANK_REVIEW"
+    WAITLISTED = "WAITLISTED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    REJECTED_BY_BANK = "REJECTED_BY_BANK"
+    REJECTED_BY_ADMIN = "REJECTED_BY_ADMIN"
+    WITHDRAWN = "WITHDRAWN"
+    FUNDED = "FUNDED"
 
 class Application(Base):
     __tablename__ = "applications"
@@ -33,8 +37,15 @@ class Application(Base):
     
     amount_requested = Column(Float, nullable=False)
     purpose = Column(String, nullable=False)
-    status = Column(SQLEnum(ApplicationStatus), default=ApplicationStatus.PENDING)
-    
+    status = Column(SQLEnum(ApplicationStatus), default=ApplicationStatus.PENDING_ADMIN_REVIEW)
+
+    # Admin review metadata
+    reviewed_by_admin = Column(Integer, ForeignKey("users.id"), nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    admin_notes = Column(String, nullable=True)
+    blocked_reason = Column(String, nullable=True)
+    forwarded_at = Column(DateTime(timezone=True), nullable=True)
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

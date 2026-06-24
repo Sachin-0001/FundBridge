@@ -68,7 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // router.push("/login"); // Commenting out strict protection while building pages
     } else if (user) {
       if ((pathname === "/login" || pathname === "/register")) {
-        router.push(user.role === "BUSINESS" ? "/dashboard/business" : "/dashboard/bank");
+        if (user.role === "BUSINESS") router.push("/dashboard/business");
+        else if (user.role === "BANK") router.push("/dashboard/bank");
+        else if (user.role === "ADMIN") router.push("/dashboard/admin");
       }
     }
   }, [user, loading, pathname, router]);
@@ -83,7 +85,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       // Automatically redirect based on newly fetched user
       const currentUser = await api.get("/auth/me");
-      router.push(currentUser.data.role === "BUSINESS" ? "/dashboard/business" : "/dashboard/bank");
+      if (currentUser.data.role === "BUSINESS") router.push("/dashboard/business");
+      else if (currentUser.data.role === "BANK") router.push("/dashboard/bank");
+      else if (currentUser.data.role === "ADMIN") router.push("/dashboard/admin");
     }
   };
 
