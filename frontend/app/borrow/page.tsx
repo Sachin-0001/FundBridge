@@ -26,13 +26,13 @@ const formSchema = z.object({
   // Step 1
   company_name: z.string().min(2, "Company name is required"),
   industry: z.string().min(2, "Industry is required"),
-  business_type: z.nativeEnum(BusinessType, { errorMap: () => ({ message: "Required" }) }),
+  business_type: z.nativeEnum(BusinessType, { message: "Required" }),
   years_in_operation: z.coerce.number().min(0, "Required"),
   
   // Step 2
   funding_goal: z.coerce.number().min(1000, "Minimum $1,000"),
-  funding_purpose: z.nativeEnum(FundingPurpose, { errorMap: () => ({ message: "Required" }) }),
-  loan_type: z.nativeEnum(LoanType, { errorMap: () => ({ message: "Required" }) }),
+  funding_purpose: z.nativeEnum(FundingPurpose, { message: "Required" }),
+  loan_type: z.nativeEnum(LoanType, { message: "Required" }),
   
   // Step 3
   annual_revenue: z.coerce.number().min(0, "Required"),
@@ -57,7 +57,7 @@ export default function BorrowPage() {
   const router = useRouter();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       company_name: "",
       industry: "",

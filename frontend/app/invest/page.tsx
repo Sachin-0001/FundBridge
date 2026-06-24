@@ -78,7 +78,7 @@ export default function InvestPage() {
   const router = useRouter();
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
       institution_name: "",
       institution_type: institutionTypes[0],
