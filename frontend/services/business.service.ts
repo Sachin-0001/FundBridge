@@ -37,6 +37,8 @@ export interface BusinessRegistrationData {
   funding_goal: number;
   funding_purpose: FundingPurpose;
   loan_type: LoanType;
+  preferred_tenure_min?: number;
+  preferred_tenure_max?: number;
   
   // Step 3
   annual_revenue: number;

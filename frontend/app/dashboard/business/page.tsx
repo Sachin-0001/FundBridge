@@ -125,26 +125,31 @@ export default function BusinessDashboard() {
     }
   };
 
+  const { user, loading: authLoading } = useAuth();
+
   const { data: dashboardRes, isLoading: loadingDash } = useQuery({
     queryKey: ['businessDashboard'],
-    queryFn: () => BusinessService.getDashboard()
+    queryFn: () => BusinessService.getDashboard(),
+    enabled: !!user,
   });
 
   const { data: matchesRes, isLoading: loadingMatches } = useQuery({
     queryKey: ['businessMatches'],
-    queryFn: () => BusinessService.getMatches()
+    queryFn: () => BusinessService.getMatches(),
+    enabled: !!user,
   });
 
-  const { data: appsRes } = useQuery({
+  const { data: appsRes, isLoading: loadingApps, error: appsError } = useQuery({
     queryKey: ['businessApplications'],
-    queryFn: () => applicationService.getBusinessApplications()
+    queryFn: () => applicationService.getBusinessApplications(),
+    enabled: !!user,
   });
 
   const data = dashboardRes?.data;
   const matches = (matchesRes?.data || []).filter((m: any) => m.compatibility_score > 75);
-  const applications = appsRes || [];
+  const applications = (appsRes as any[]) || [];
   
-  const loading = loadingDash || loadingMatches;
+  const loading = authLoading || loadingDash || loadingMatches || loadingApps;
 
   useEffect(() => {
     if (data && !editFormData) {
@@ -172,7 +177,7 @@ export default function BusinessDashboard() {
     // Optimistic UI update
     const bank = matches.find((m: any) => m.bank_id === bankId)?.bank;
     const optimisticApp = {
-      id: Math.random(),
+      id: Math.floor(Date.now() / 1000),
       bank_id: bankId,
       amount_requested: data?.funding_goal || 0,
       purpose: data?.funding_purpose || "Working Capital",
@@ -198,6 +203,12 @@ export default function BusinessDashboard() {
   };
 
   const handleWithdraw = async (appId: number) => {
+    if (!Number.isInteger(appId) || appId <= 0) {
+      console.warn("Skipping withdraw until application has a valid server ID", appId);
+      await queryClient.invalidateQueries({ queryKey: ['businessApplications'] });
+      return;
+    }
+
     // Optimistic UI update
     queryClient.setQueryData(['businessApplications'], (oldData: any) => {
       return (oldData || []).map((app: any) => app.id === appId ? { ...app, status: 'withdrawn' } : app);
@@ -213,7 +224,7 @@ export default function BusinessDashboard() {
   };
 
   const hasApplied = (bankId: number) => {
-    return applications.some((app: any) => app.bank_id === bankId && app.status !== 'rejected' && app.status !== 'withdrawn');
+    return applications.some((app: any) => app.bank_id === bankId && app.status !== 'rejected' && app.status !== 'withdrawn' && app.status !== 'approved');
   };
 
   useEffect(() => {
@@ -398,7 +409,7 @@ export default function BusinessDashboard() {
                   <div className="flex items-baseline gap-2">
                     <h3 className="text-2xl font-semibold">{formatCurrency(data?.funding_goal)}</h3>
                   </div>
-                  <span className="text-[10px] text-zinc-500 mt-1">{data?.loan_type}</span>
+                  <span className="text-[10px] text-zinc-500 mt-1">{data?.loan_type} {data?.preferred_tenure_min && data?.preferred_tenure_max ? `| ${data.preferred_tenure_min}-${data.preferred_tenure_max}m tenure` : ''}</span>
                 </Card>
               </CardTransition>
 
@@ -625,7 +636,7 @@ export default function BusinessDashboard() {
                       {applications.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="px-5 py-8 text-center text-zinc-500 text-xs">
-                            No active applications found. Apply to a matched lender to start.
+                            No applications found. Apply to a matched lender to start.
                           </td>
                         </tr>
                       ) : (
@@ -810,6 +821,14 @@ export default function BusinessDashboard() {
                             <option key={type} value={type}>{type}</option>
                           ))}
                         </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Min Preferred Tenure (Months)</label>
+                        <input type="number" value={editFormData.preferred_tenure_min || ""} onChange={e => setEditFormData({...editFormData, preferred_tenure_min: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Max Preferred Tenure (Months)</label>
+                        <input type="number" value={editFormData.preferred_tenure_max || ""} onChange={e => setEditFormData({...editFormData, preferred_tenure_max: parseInt(e.target.value)})} className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                     </div>
                   </div>

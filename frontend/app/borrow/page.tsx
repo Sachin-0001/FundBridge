@@ -33,6 +33,8 @@ const formSchema = z.object({
   funding_goal: z.coerce.number().min(1000, "Minimum $1,000"),
   funding_purpose: z.nativeEnum(FundingPurpose, { message: "Required" }),
   loan_type: z.nativeEnum(LoanType, { message: "Required" }),
+  preferred_tenure_min: z.coerce.number().optional(),
+  preferred_tenure_max: z.coerce.number().optional(),
   
   // Step 3
   annual_revenue: z.coerce.number().min(0, "Required"),
@@ -66,6 +68,8 @@ export default function BorrowPage() {
       funding_goal: "" as any,
       funding_purpose: FundingPurpose.WORKING_CAPITAL,
       loan_type: LoanType.TERM_LOAN,
+      preferred_tenure_min: "" as any,
+      preferred_tenure_max: "" as any,
       annual_revenue: "" as any,
       annual_net_profit: "" as any,
       existing_debt: "" as any,
@@ -102,7 +106,7 @@ export default function BorrowPage() {
   const nextStep = async () => {
     let isValid = false;
     if (currentStep === 0) isValid = await form.trigger(["company_name", "industry", "business_type", "years_in_operation"]);
-    else if (currentStep === 1) isValid = await form.trigger(["funding_goal", "funding_purpose", "loan_type"]);
+    else if (currentStep === 1) isValid = await form.trigger(["funding_goal", "funding_purpose", "loan_type", "preferred_tenure_min", "preferred_tenure_max"]);
     else if (currentStep === 2) isValid = await form.trigger(["annual_revenue", "annual_net_profit", "existing_debt", "monthly_cash_flow", "business_credit_score"]);
     else isValid = true;
 
@@ -239,6 +243,16 @@ export default function BorrowPage() {
                             <option key={t} value={t}>{t}</option>
                           ))}
                         </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Min Preferred Tenure (Months)</Label>
+                          <Input type="number" {...form.register("preferred_tenure_min")} placeholder="e.g. 12" className="h-12" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Max Preferred Tenure (Months)</Label>
+                          <Input type="number" {...form.register("preferred_tenure_max")} placeholder="e.g. 60" className="h-12" />
+                        </div>
                       </div>
                     </div>
                   </div>
