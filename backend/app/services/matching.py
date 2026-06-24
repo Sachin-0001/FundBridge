@@ -25,12 +25,12 @@ class MatchingService:
         # Revenue: 20
         if reqs.min_revenue is not None:
             if business.annual_revenue >= reqs.min_revenue:
-                score += 25
+                score += 20
                 passed_rules.append(f"Revenue meets minimum of {reqs.min_revenue}")
             else:
                 failed_rules.append(f"Revenue {business.annual_revenue} below minimum {reqs.min_revenue}")
         else:
-            score += 25
+            score += 20
             passed_rules.append("No minimum revenue requirement")
 
         # Debt Ratio: 25 (+10 points)
@@ -38,12 +38,12 @@ class MatchingService:
         ratio = (business.existing_debt / business.annual_revenue) if business.annual_revenue and business.annual_revenue > 0 else 0
         if reqs.max_debt_to_revenue_ratio is not None:
             if ratio <= reqs.max_debt_to_revenue_ratio:
-                score += 30
+                score += 25
                 passed_rules.append(f"Debt-to-Revenue Ratio {ratio:.2f} within limit {reqs.max_debt_to_revenue_ratio}")
             else:
                 failed_rules.append(f"Debt-to-Revenue Ratio {ratio:.2f} exceeds limit {reqs.max_debt_to_revenue_ratio}")
         else:
-            score += 30
+            score += 25
             passed_rules.append("No maximum Debt-to-Revenue requirement")
 
         # Years: 15
